@@ -81,6 +81,18 @@ public interface NyloerConfig extends Config
 
 	@ConfigItem(
 		position = 5,
+		keyName = "splitsAsNextWave",
+		name = "Splits As Next Wave",
+		description = "Splits will have wave + 1",
+		section = generalSettings
+	)
+	default boolean splitsAsNextWave()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		position = 6,
 		keyName = "wavePrefix",
 		name = "Wave Spawn Prefix",
 		description = "Prefix for spawned nylocas from waves.",
@@ -92,7 +104,7 @@ public interface NyloerConfig extends Config
 	}
 
 	@ConfigItem(
-		position = 6,
+		position = 7,
 		keyName = "splitPrefix",
 		name = "Split Spawn Prefix",
 		description = "Prefix for spawned nylocas from splits.",
@@ -149,9 +161,45 @@ public interface NyloerConfig extends Config
 		return 12;
 	}
 
-	@Alpha
 	@ConfigItem(
 		position = 3,
+		keyName = "splitFontsType",
+		name = "Split Font Type",
+		description = "Nylocas wave number font type (split)",
+		section = fontsSettings
+	)
+	default NyloerFonts splitFontsType()
+	{
+		return NyloerFonts.ARIAL;
+	}
+
+	@ConfigItem(
+		position = 4,
+		keyName = "splitFontsBold",
+		name = "Split Bold",
+		description = "Nylocas wave number fonts will be bold (split)",
+		section = fontsSettings
+	)
+	default boolean splitFontsBold()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		position = 5,
+		keyName = "splitFontsSize",
+		name = "Split Font Size",
+		description = "Nylocas wave number size (split)",
+		section = fontsSettings
+	)
+	default int splitFontsSize()
+	{
+		return 12;
+	}
+
+	@Alpha
+	@ConfigItem(
+		position = 6,
 		keyName = "meleeNylocasColor",
 		name = "Melee Color",
 		description = "Color of melee nylocas.",
@@ -164,9 +212,22 @@ public interface NyloerConfig extends Config
 
 	@Alpha
 	@ConfigItem(
-		position = 4,
+		position = 7,
+		keyName = "meleeNylocasOutlineColor",
+		name = "Melee Outline Color",
+		description = "Outline color of melee nylocas.",
+		section = fontsSettings
+	)
+	default Color meleeNylocasOutlineColor()
+	{
+		return Color.BLACK;
+	}
+
+	@Alpha
+	@ConfigItem(
+		position = 8,
 		keyName = "rangeNylocasColor",
-		name = "Range color",
+		name = "Range Color",
 		description = "Color of range nylocas.",
 		section = fontsSettings
 	)
@@ -177,7 +238,20 @@ public interface NyloerConfig extends Config
 
 	@Alpha
 	@ConfigItem(
-		position = 5,
+		position = 9,
+		keyName = "rangeNylocasOutlineColor",
+		name = "Range Outline Color",
+		description = "Outline color of range nylocas.",
+		section = fontsSettings
+	)
+	default Color rangeNylocasOutlineColor()
+	{
+		return Color.BLACK;
+	}
+
+	@Alpha
+	@ConfigItem(
+		position = 10,
 		keyName = "mageNylocasColor",
 		name = "Mage Color",
 		description = "Color of mage nylocas.",
@@ -186,5 +260,18 @@ public interface NyloerConfig extends Config
 	default Color mageNylocasColor()
 	{
 		return Color.CYAN;
+	}
+
+	@Alpha
+	@ConfigItem(
+		position = 11,
+		keyName = "mageNylocasOutlineColor",
+		name = "Mage Outline Color",
+		description = "Outline color of mage nylocas.",
+		section = fontsSettings
+	)
+	default Color mageNylocasOutlineColor()
+	{
+		return Color.BLACK;
 	}
 }

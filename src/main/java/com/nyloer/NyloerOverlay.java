@@ -54,23 +54,12 @@ public class NyloerOverlay extends Overlay
 		if (!nyloers.isEmpty())
 		{
 			graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-
-			int style;
-			if (config.fontsBold())
-			{
-				style = Font.BOLD;
-			}
-			else
-			{
-				style = Font.PLAIN;
-			}
-			graphics.setFont(new Font(config.fontsType().toString(), style, config.fontsSize()));
-
 			nyloers.asMap().forEach(
 				(worldPoint, npcs) -> {
 					int offset = 0;
 					for (NyloerPlugin.NyloerNpc nyloer : npcs)
 					{
+						graphics.setFont(nyloer.getFont());
 						this.draw(graphics, nyloer, offset);
 						offset += graphics.getFontMetrics().getHeight();
 					}
@@ -81,7 +70,6 @@ public class NyloerOverlay extends Overlay
 
 	private void draw(Graphics2D graphics, NyloerPlugin.NyloerNpc nyloer, int offset)
 	{
-		graphics.setColor(Color.BLACK);
 		String prefix;
 		String text;
 		if (nyloer.isSplit())
@@ -111,6 +99,7 @@ public class NyloerOverlay extends Overlay
 		}
 		int x = canvasTextLocation.getX();
 		int y = canvasTextLocation.getY() + offset;
+		graphics.setColor(nyloer.getOutlineColor());
 		IntStream.range(-1, 2).forEachOrdered(ex -> {
 			IntStream.range(-1, 2).forEachOrdered(ey -> {
 				if (ex != 0 && ey != 0)

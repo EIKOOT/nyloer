@@ -2,6 +2,7 @@ package com.nyloer;
 
 import com.google.inject.Provides;
 import java.awt.Color;
+import java.awt.Font;
 import java.util.ArrayList;
 import javax.inject.Inject;
 import lombok.Getter;
@@ -15,10 +16,8 @@ import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.NpcSpawned;
-import net.runelite.api.events.VarbitChanged;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.NpcUtil;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -254,6 +253,12 @@ public class NyloerPlugin extends Plugin
 		@Getter
 		private Color color;
 
+		@Getter
+		private Color outlineColor;
+
+		@Getter
+		private Font font;
+
 		public void incrementTicks()
 		{
 			++ticksAlive;
@@ -273,22 +278,55 @@ public class NyloerPlugin extends Plugin
 			if (ArrayUtils.contains(MELEE_NYLOCAS_IDS, id))
 			{
 				color = config.meleeNylocasColor();
+				outlineColor = config.meleeNylocasOutlineColor();
 				nyloerSymbol = config.meleeNylocasSymbol();
 			}
 			else if (ArrayUtils.contains(RANGE_NYLOCAS_IDS, id))
 			{
 				color = config.rangeNylocasColor();
+				outlineColor = config.rangeNylocasOutlineColor();
 				nyloerSymbol = config.rangeNylocasSymbol();
 			}
 			else if (ArrayUtils.contains(MAGE_NYLOCAS_IDS, id))
 			{
 				color = config.mageNylocasColor();
+				outlineColor = config.mageNylocasOutlineColor();
 				nyloerSymbol = config.mageNylocasSymbol();
 			}
 			else
 			{
-				color = Color.BLACK;
+				color = Color.WHITE;
+				outlineColor = Color.BLACK;
 				isAlive = false;
+			}
+		}
+
+		private void configureFonts()
+		{
+			int style;
+			if (isSplit)
+			{
+				if (config.splitFontsBold())
+				{
+					style = Font.BOLD;
+				}
+				else
+				{
+					style = Font.PLAIN;
+				}
+				this.font = new Font(config.splitFontsType().toString(), style, config.splitFontsSize());
+			}
+			else
+			{
+				if (config.fontsBold())
+				{
+					style = Font.BOLD;
+				}
+				else
+				{
+					style = Font.PLAIN;
+				}
+				this.font = new Font(config.fontsType().toString(), style, config.fontsSize());
 			}
 		}
 
@@ -355,9 +393,18 @@ public class NyloerPlugin extends Plugin
 			this.spawn = findSpawn(npc);
 			this.isSplit = this.spawn.equals("SPLIT");
 			this.tickSpawned = NyloerPlugin.this.client.getTickCount();
-			this.waveSpawned = NyloerPlugin.this.waveNumber;
+			if (isSplit && config.splitsAsNextWave() && tickSpawned > NyloerPlugin.this.lastWaveTickSpawned)
+			{
+				this.waveSpawned = NyloerPlugin.this.waveNumber + 1;
+			}
+			else
+			{
+				this.waveSpawned = NyloerPlugin.this.waveNumber;
+			}
 			this.ticksAlive = 0;
-			this.updateStyle(this.id);
+			this.updateStyle(id);
+			this.configureFonts();
+
 
 			if (npc.getComposition().getSize() == 1)
 			{
