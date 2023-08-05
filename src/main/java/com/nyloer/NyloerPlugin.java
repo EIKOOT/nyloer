@@ -80,13 +80,13 @@ public class NyloerPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
-		log.info("Nyloer started.");
+		start();
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
-		log.info("Nyloer stopped.");
+		stop();
 	}
 
 	@Provides
