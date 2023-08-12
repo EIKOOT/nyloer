@@ -6,6 +6,9 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.stream.IntStream;
 import javax.inject.Inject;
 import net.runelite.api.Point;
@@ -35,6 +38,15 @@ public class NyloerOverlay extends Overlay
 		this.nyloers = ArrayListMultimap.create();
 	}
 
+//	public static <T> ArrayList<T> reverse(ArrayList<T> list) {
+//		int length = list.size();
+//		ArrayList<T> result = new ArrayList<T>(length);
+//		for (int i = length - 1; i >= 0; i--) {
+//			result.add(list.get(i));
+//		}
+//		return result;
+//	}
+
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
@@ -44,13 +56,21 @@ public class NyloerOverlay extends Overlay
 			return null;
 		}
 		nyloers = ArrayListMultimap.create();
-		for (NyloerPlugin.NyloerNpc nyloer : this.plugin.nyloers)
-		{
+		int length = this.plugin.nyloers.size();
+		for (int i = length - 1; i >= 0; i--) {
+			NyloerPlugin.NyloerNpc nyloer = this.plugin.nyloers.get(i);
 			if (nyloer.isAlive() && !npcUtil.isDying(nyloer.getNpc()))
 			{
 				nyloers.put(nyloer.getNpc().getWorldLocation(), nyloer);
 			}
 		}
+//		for (NyloerPlugin.NyloerNpc nyloer : reverse(this.plugin.nyloers))
+//		{
+//			if (nyloer.isAlive() && !npcUtil.isDying(nyloer.getNpc()))
+//			{
+//				nyloers.put(nyloer.getNpc().getWorldLocation(), nyloer);
+//			}
+//		}
 		if (!nyloers.isEmpty())
 		{
 			graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
