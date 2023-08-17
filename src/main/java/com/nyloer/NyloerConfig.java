@@ -6,11 +6,14 @@ import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
+import net.runelite.client.config.Keybind;
 
 
-@ConfigGroup("NyloerConfig")
+@ConfigGroup(NyloerConfig.GROUP)
 public interface NyloerConfig extends Config
 {
+	String GROUP = "nyloer";
+
 	@ConfigSection(
 		name = "General Settings",
 		position = 0,
@@ -273,5 +276,29 @@ public interface NyloerConfig extends Config
 	default Color mageNylocasOutlineColor()
 	{
 		return Color.BLACK;
+	}
+
+	@ConfigItem(
+		position = 12,
+		keyName = "makeDarkerHotkey",
+		name = "Make Darker Hotkey",
+		description = "Makes color darker for present nylocas in the room.",
+		section = fontsSettings
+	)
+	default Keybind makeDarkerHotkey()
+	{
+		return Keybind.NOT_SET;
+	}
+
+	@ConfigItem(
+		position = 13,
+		keyName = "customFontConfig",
+		name = "Font config",
+		description = "Config settings wave:melee/range/mage:color",
+		section = fontsSettings
+	)
+	default String customFontConfig()
+	{
+		return "0:mage:#00FFFF";
 	}
 }

@@ -18,25 +18,32 @@ import net.runelite.api.events.GameTick;
 import net.runelite.api.events.NpcSpawned;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.NpcUtil;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
+import java.awt.event.KeyEvent;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import net.runelite.client.input.KeyListener;
+import net.runelite.client.input.KeyManager;
 
 
 @PluginDescriptor(
 	name = "Nyloer"
 )
-public class NyloerPlugin extends Plugin
+public class NyloerPlugin extends Plugin implements KeyListener
 {
 	@Inject
 	public Client client;
 
 	@Inject
 	public NyloerConfig config;
+
+	@Inject
+	public CustomFontConfig customFontConfig;
 
 	@Inject
 	private OverlayManager overlayManager;
@@ -46,6 +53,9 @@ public class NyloerPlugin extends Plugin
 
 	@Inject
 	private NyloerOverlay nyloerOverlay;
+
+	@Inject
+	private KeyManager keyManager;
 
 	private static final int NYLOCAS_REGION_ID = 13122;
 	private final int[] NYLOCAS_PILLAR_IDS = {8358, 10811, 10790};
@@ -81,18 +91,58 @@ public class NyloerPlugin extends Plugin
 	protected void startUp() throws Exception
 	{
 		start();
+		keyManager.registerKeyListener(this);
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
 		stop();
+		keyManager.unregisterKeyListener(this);
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e)
+	{
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e)
+	{
+		if (config.makeDarkerHotkey().matches(e))
+		{
+			NyloerPlugin.log.debug("Making nylos darker...");
+			for (NyloerNpc nyloer : nyloers)
+			{
+				if (!nyloer.colorDarker)
+				{
+					nyloer.color = nyloer.color.darker().darker();
+					nyloer.colorDarker = true;
+				}
+			}
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e)
+	{
 	}
 
 	@Provides
 	NyloerConfig provideConfig(ConfigManager configManager)
 	{
 		return (NyloerConfig) configManager.getConfig(NyloerConfig.class);
+	}
+
+	@Subscribe
+	public void onConfigChanged(ConfigChanged configChanged)
+	{
+		if (!configChanged.getGroup().equals(NyloerConfig.GROUP))
+		{
+			return;
+		}
+		customFontConfig.getColorSettings().clear();
+		customFontConfig.parse(config);
 	}
 
 	@Subscribe
@@ -158,14 +208,14 @@ public class NyloerPlugin extends Plugin
 		if (ArrayUtils.contains(NYLOCAS_NPC_IDS, npc.getId()))
 		{
 			NyloerNpc nyloer = new NyloerNpc(npc);
-			nyloers.add(nyloer);
 			if (!nyloer.spawn.equals("SPLIT") && lastWaveTickSpawned != client.getTickCount())
 			{
 				++waveNumber;
 				lastWaveTickSpawned = client.getTickCount();
 				++nyloer.waveSpawned;
+				nyloer.updateStyle(nyloer.id);
 			}
-			NyloerPlugin.log.debug("wave " + nyloer.waveSpawned + " " + nyloer.spawn);
+			nyloers.add(nyloer);
 		}
 	}
 
@@ -187,14 +237,16 @@ public class NyloerPlugin extends Plugin
 	private void start()
 	{
 		NyloerPlugin.log.debug("Starting Nyloer.");
+		customFontConfig.parse(config);
 		overlayManager.add(nyloerOverlay);
 	}
 
 	private void stop()
 	{
 		NyloerPlugin.log.debug("Stopping Nyloer.");
-		reset();
+		customFontConfig.getColorSettings().clear();
 		overlayManager.remove(nyloerOverlay);
+		reset();
 	}
 
 	private void reset()
@@ -257,6 +309,9 @@ public class NyloerPlugin extends Plugin
 		private Color outlineColor;
 
 		@Getter
+		private boolean colorDarker;
+
+		@Getter
 		private Font font;
 
 		public void incrementTicks()
@@ -275,29 +330,43 @@ public class NyloerPlugin extends Plugin
 
 		private void updateStyle(int id)
 		{
+			String fontConfigKey;
 			if (ArrayUtils.contains(MELEE_NYLOCAS_IDS, id))
 			{
+				fontConfigKey = waveSpawned + "-" + "melee";
 				color = config.meleeNylocasColor();
 				outlineColor = config.meleeNylocasOutlineColor();
 				nyloerSymbol = config.meleeNylocasSymbol();
 			}
 			else if (ArrayUtils.contains(RANGE_NYLOCAS_IDS, id))
 			{
+				fontConfigKey = waveSpawned + "-" + "range";
 				color = config.rangeNylocasColor();
 				outlineColor = config.rangeNylocasOutlineColor();
 				nyloerSymbol = config.rangeNylocasSymbol();
 			}
 			else if (ArrayUtils.contains(MAGE_NYLOCAS_IDS, id))
 			{
+				fontConfigKey = waveSpawned + "-" + "mage";
 				color = config.mageNylocasColor();
 				outlineColor = config.mageNylocasOutlineColor();
 				nyloerSymbol = config.mageNylocasSymbol();
 			}
 			else
 			{
+				fontConfigKey = null;
 				color = Color.WHITE;
 				outlineColor = Color.BLACK;
 				isAlive = false;
+			}
+			Color customColor = customFontConfig.getColor(fontConfigKey);
+			if (customColor != null)
+			{
+				color = customColor;
+			}
+			if (colorDarker)
+			{
+				color = color.darker().darker();
 			}
 		}
 
@@ -393,6 +462,7 @@ public class NyloerPlugin extends Plugin
 			this.spawn = findSpawn(npc);
 			this.isSplit = this.spawn.equals("SPLIT");
 			this.tickSpawned = NyloerPlugin.this.client.getTickCount();
+			this.colorDarker = false;
 			if (isSplit && config.splitsAsNextWave() && tickSpawned > NyloerPlugin.this.lastWaveTickSpawned)
 			{
 				this.waveSpawned = NyloerPlugin.this.waveNumber + 1;
