@@ -25,11 +25,12 @@ public class NyloStats
 	private NyloerPlugin plugin;
 	private NyloerConfig config;
 
-	private ArrayList<Stall> stallArray;
-	int w1T;
-	int lastNyloDeathT;
-	int bossSpawnT;
-	int bossDeathT;
+	private boolean _saveStats;
+	private final ArrayList<Stall> stallArray;
+	private int w1T;
+	private int lastNyloDeathT;
+	private int bossSpawnT;
+	private int bossDeathT;
 
 	private int currWave;
 	private int stalls;
@@ -93,6 +94,7 @@ public class NyloStats
 		this.plugin = plugin;
 		this.config = config;
 
+		_saveStats = false;
 		stallArray = new ArrayList<Stall>();
 		w1T = -1;
 		lastNyloDeathT = -1;
@@ -195,6 +197,7 @@ public class NyloStats
 					if (currWave == 1)
 					{
 						w1T = client.getTickCount();
+						_saveStats = true;
 					}
 					if (currWave == 20)
 					{
@@ -261,7 +264,10 @@ public class NyloStats
 		boolean inTob = tobVar == 2 || tobVar == 3;
 		if (!inTob)
 		{
-			saveStats();
+			if (_saveStats)
+			{
+				saveStats();
+			}
 			reset();
 		}
 	}
@@ -371,6 +377,7 @@ public class NyloStats
 			}
 		}
 		plugin.sidePanel.addStats(stats);
+		_saveStats = false;
 	}
 
 	private String ticks2Time(int ticks)
