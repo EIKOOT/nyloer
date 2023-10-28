@@ -13,7 +13,9 @@ public enum NyloerFonts
 	ROCKWELL("Rockwell"),
 	SEGOE_UI("Segoe Ui"),
 	TIMES_NEW_ROMAN("Times New Roman"),
-	VERDANA("Verdana");
+	VERDANA("Verdana"),
+	DIALOG("DIALOG"),
+	RUNESCAPE("RuneScape");
 
 	private final String name;
 

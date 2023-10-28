@@ -118,13 +118,57 @@ public interface NyloerConfig extends Config
 		return "s";
 	}
 
+	@ConfigSection(
+		name = "Count Panel Settings",
+		position = 1,
+		description = "Count Panel Settings",
+		closedByDefault = false
+	)
+	String countPanelSettings = "countPanelSettings";
+
+	@ConfigItem(
+		position = 0,
+		keyName = "showNylocasCountPanel",
+		name = "Count panel",
+		description = "Shows number of nylocas in the room",
+		section = countPanelSettings
+	)
+	default boolean showNylocasCountPanel()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		position = 1,
+		keyName = "nylocasCountPanelSimple",
+		name = "Simple Panel",
+		description = "Only shows numbers",
+		section = countPanelSettings
+	)
+	default boolean nylocasCountPanelSimple()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		position = 2,
+		keyName = "nylocasCountPanelFontsSize",
+		name = "Font Size",
+		description = "Count panel font size",
+		section = countPanelSettings
+	)
+	default int nylocasCountPanelFontsSize()
+	{
+		return 10;
+	}
+
 	// ------------------------------------------------------------
 
 	@ConfigSection(
 		name = "Font Settings",
-		position = 1,
+		position = 2,
 		description = "Fonts settings",
-		closedByDefault = false
+		closedByDefault = true
 	)
 	String fontsSettings = "fontsSettings";
 
@@ -301,4 +345,83 @@ public interface NyloerConfig extends Config
 	{
 		return "0:mage:#00FFFF";
 	}
+
+	// ------------------------------------------------------------
+	@ConfigSection(
+		name = "Role Swapper",
+		position = 3,
+		description = "Role Swapper Settings",
+		closedByDefault = true
+	)
+	String roleSwapperSettings = "roleSwapperSettings";
+
+	@ConfigItem(
+		keyName = "mageRoleSwaps",
+		name = "Mage Swaps",
+		description = "Custom swaps for mage role",
+		section = roleSwapperSettings,
+		position = 0
+	)
+	default String mageRoleSwaps()
+	{
+		return "attack,nylocas ischyros*260*\n" +
+			"attack,nylocas ischyros*162*\n" +
+			"attack,nylocas toxobolos*260*\n" +
+			"attack,nylocas toxobolos*162*\n" +
+			"attack,nylocas hagios*260*\n" +
+			"attack,nylocas hagios*162*";
+	}
+
+	@ConfigItem(
+		keyName = "rangeRoleSwaps",
+		name = "Range Swaps",
+		description = "Custom swaps for range role",
+		section = roleSwapperSettings,
+		position = 1
+	)
+	default String rangeRoleSwaps()
+	{
+		return "attack,nylocas ischyros*260*\n" +
+			"attack,nylocas ischyros*162*\n" +
+			"attack,nylocas hagios*260*\n" +
+			"attack,nylocas hagios*162*\n" +
+			"attack,nylocas toxobolos*260*\n" +
+			"attack,nylocas toxobolos*162*";
+	}
+
+	@ConfigItem(
+		keyName = "meleeRoleSwaps",
+		name = "Melee Swaps",
+		description = "Custom swaps for melee role",
+		section = roleSwapperSettings,
+		position = 2
+	)
+	default String meleeRoleSwaps()
+	{
+		return "attack,nylocas hagios*269*\n" +
+			"attack,nylocas hagios*162*\n" +
+			"attack,nylocas toxobolos*260*\n" +
+			"attack,nylocas toxobolos*162*\n" +
+			"attack,nylocas ischyros*260*\n" +
+			"attack,nylocas ischyros*162*";
+	}
+
+	@ConfigItem(
+		keyName = "customRoleSwaps",
+		name = "Custom Swaps",
+		description = "Custom swaps for Custom role",
+		section = roleSwapperSettings,
+		position = 3
+	)
+	default String customRoleSwaps()
+	{
+		return "attack,nylocas toxobolos*260*\n" +
+			"attack,nylocas toxobolos*162*\n" +
+			"attack,nylocas hagios*260*\n" +
+			"attack,nylocas hagios*162*\n" +
+			"attack,nylocas ischyros*260*\n" +
+			"attack,nylocas ischyros*162*";
+	}
+
+
 }

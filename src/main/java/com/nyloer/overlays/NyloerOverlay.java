@@ -1,14 +1,12 @@
-package com.nyloer;
+package com.nyloer.overlays;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.nyloer.NyloerConfig;
+import com.nyloer.NyloerPlugin;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.stream.IntStream;
 import javax.inject.Inject;
 import net.runelite.api.Point;
@@ -42,15 +40,15 @@ public class NyloerOverlay extends Overlay
 	public Dimension render(Graphics2D graphics)
 	{
 		this.nyloers.clear();
-		if (this.plugin.nyloers.isEmpty())
+		if (this.plugin.getNyloers().isEmpty())
 		{
 			return null;
 		}
 		nyloers = ArrayListMultimap.create();
-		int length = this.plugin.nyloers.size();
+		int length = this.plugin.getNyloers().size();
 		for (int i = length - 1; i >= 0; i--)
 		{
-			NyloerPlugin.NyloerNpc nyloer = this.plugin.nyloers.get(i);
+			NyloerPlugin.NyloerNpc nyloer = this.plugin.getNyloers().get(i);
 			if (nyloer.isAlive() && !npcUtil.isDying(nyloer.getNpc()))
 			{
 				nyloers.put(nyloer.getNpc().getWorldLocation(), nyloer);
@@ -113,7 +111,12 @@ public class NyloerOverlay extends Overlay
 				}
 			});
 		});
-		graphics.setColor(nyloer.getColor());
+		Color color = nyloer.getColor();
+		if ((nyloer.getTickSpawned() <= plugin.makeDarkerT) || (nyloer.isColorDarker()))
+		{
+			color = color.darker().darker();
+		}
+		graphics.setColor(color);
 		graphics.drawString(text, x, y);
 	}
 }

@@ -1,27 +1,49 @@
 package com.nyloer;
 
 import com.google.inject.Provides;
+import com.nyloer.nylostats.NyloStats;
+import com.nyloer.overlays.NyloerCountPanel;
+import com.nyloer.overlays.NyloerOverlay;
+import com.nyloer.roleswapper.RoleSwapper;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import javax.inject.Inject;
 import lombok.Getter;
 import lombok.Setter;
+import net.runelite.api.Actor;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
+import net.runelite.api.EquipmentInventorySlot;
 import net.runelite.api.GameState;
+import net.runelite.api.Hitsplat;
+import net.runelite.api.InventoryID;
+import net.runelite.api.Item;
+import net.runelite.api.ItemContainer;
 import net.runelite.api.NPC;
+import net.runelite.api.VarPlayer;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.HitsplatApplied;
+import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.NpcSpawned;
+import net.runelite.api.events.VarbitChanged;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.NpcUtil;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.specialcounter.SpecialWeapon;
+import net.runelite.client.ui.ClientToolbar;
+import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.ui.overlay.OverlayManager;
 import java.awt.event.KeyEvent;
 import org.apache.commons.lang3.ArrayUtils;
@@ -29,7 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.runelite.client.input.KeyListener;
 import net.runelite.client.input.KeyManager;
-
+import net.runelite.client.util.ImageUtil;
 
 @PluginDescriptor(
 	name = "Nyloer"
@@ -40,7 +62,19 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	public Client client;
 
 	@Inject
+	private ClientToolbar clientToolbar;
+
+	@Inject
+	private EventBus eventBus;
+
+	@Inject
 	public NyloerConfig config;
+
+	@Inject
+	public RoleSwapper roleSwapper;
+
+	@Inject
+	public NyloStats nyloStats;
 
 	@Inject
 	public CustomFontConfig customFontConfig;
@@ -55,7 +89,13 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	private NyloerOverlay nyloerOverlay;
 
 	@Inject
+	private NyloerCountPanel nyloerCountPanel;
+
+	@Inject
 	private KeyManager keyManager;
+
+	private NavigationButton sidePanelButton;
+	public NyloerSidePanel sidePanel;
 
 	private static final int NYLOCAS_REGION_ID = 13122;
 	private final int[] NYLOCAS_PILLAR_IDS = {8358, 10811, 10790};
@@ -79,19 +119,33 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	private boolean pillarsSpawned;
 
 	@Getter
+	private int w1T = 0;
+
+	@Getter
+	public int makeDarkerT;
+
+	@Getter
 	private int waveNumber;
+
+	@Getter
+	private int nylocasAliveCount;
+
 	private int lastWaveTickSpawned;
 
 	@Getter
 	ArrayList<NyloerNpc> nyloers = new ArrayList<NyloerNpc>();
+	HashMap<Integer, NyloerNpc> nyloersIndexMap = new HashMap<>();
 
-	private static final Logger log = LoggerFactory.getLogger(NyloerPlugin.class);
+	public static final Logger log = LoggerFactory.getLogger(NyloerPlugin.class);
 
 	@Override
 	protected void startUp() throws Exception
 	{
-		start();
+		createSidePanel();
 		keyManager.registerKeyListener(this);
+		eventBus.register(roleSwapper);
+		eventBus.register(nyloStats);
+		start();
 	}
 
 	@Override
@@ -99,6 +153,8 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	{
 		stop();
 		keyManager.unregisterKeyListener(this);
+		eventBus.unregister(roleSwapper);
+		eventBus.unregister(nyloStats);
 	}
 
 	@Override
@@ -111,15 +167,9 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	{
 		if (config.makeDarkerHotkey().matches(e))
 		{
-			NyloerPlugin.log.debug("Making nylos darker...");
-			for (NyloerNpc nyloer : nyloers)
-			{
-				if (!nyloer.colorDarker)
-				{
-					nyloer.color = nyloer.color.darker().darker();
-					nyloer.colorDarker = true;
-				}
-			}
+			NyloerPlugin.log.debug("Making nyloers darker...");
+			makeDarkerT = this.client.getTickCount() - 1;
+			makeDarkerT -= (makeDarkerT - w1T) % 4;
 		}
 	}
 
@@ -143,6 +193,99 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		}
 		customFontConfig.getColorSettings().clear();
 		customFontConfig.parse(config);
+	}
+
+	private void createSidePanel()
+	{
+		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/nyloer_icon.png");
+		sidePanel = new NyloerSidePanel(client, this, config);
+		sidePanelButton = NavigationButton.builder().tooltip("Nyloer").icon(icon).priority(6).panel(sidePanel).build();
+		clientToolbar.addNavigation(sidePanelButton);
+		sidePanel.startPanel();
+	}
+
+	@Inject
+	private ClientThread clientThread;
+	private int specialPercentage;
+	private Hitsplat lastSpecHitsplat;
+	private NPC lastSpecTarget;
+	private SpecialWeapon specialWeapon;
+	private int hitsplatTick;
+
+	@Subscribe
+	public void onHitsplatApplied(HitsplatApplied hitsplatApplied)
+	{
+		Actor target = hitsplatApplied.getActor();
+		Hitsplat hitsplat = hitsplatApplied.getHitsplat();
+		if (!hitsplat.isMine() || target == client.getLocalPlayer())
+		{
+			return;
+		}
+		NPC npc = target instanceof NPC ? (NPC) target : null;
+		if (npc == null)
+		{
+			return;
+		}
+		NyloerNpc nyloerNpc = nyloersIndexMap.get(npc.getIndex());
+		if (nyloerNpc == null)
+		{
+			return;
+		}
+		if (hitsplatTick == client.getTickCount())
+		{
+			if ((ArrayUtils.contains(MAGE_NYLOCAS_IDS, npc.getId())) || (ArrayUtils.contains(RANGE_NYLOCAS_IDS, npc.getId())))
+			{
+				nyloerNpc.colorDarker = true;
+			}
+		}
+	}
+
+	@Subscribe
+	public void onVarbitChanged(VarbitChanged event)
+	{
+		if (event.getVarpId() != VarPlayer.SPECIAL_ATTACK_PERCENT)
+		{
+			return;
+		}
+		int specialPercentage = event.getValue();
+		if (this.specialPercentage == -1 || specialPercentage >= this.specialPercentage)
+		{
+			this.specialPercentage = specialPercentage;
+			return;
+		}
+		this.specialPercentage = specialPercentage;
+		final int serverTicks = client.getTickCount();
+		clientThread.invokeLater(() ->
+		{
+			this.specialWeapon = usedSpecialWeapon();
+			if (this.specialWeapon == null)
+			{
+				return;
+			}
+			Actor target = client.getLocalPlayer().getInteracting();
+			lastSpecTarget = target instanceof NPC ? (NPC) target : null;
+			hitsplatTick = serverTicks + 1;
+		});
+	}
+
+	private SpecialWeapon usedSpecialWeapon()
+	{
+		ItemContainer equipment = client.getItemContainer(InventoryID.EQUIPMENT);
+		if (equipment == null)
+		{
+			return null;
+		}
+
+		Item weapon = equipment.getItem(EquipmentInventorySlot.WEAPON.getSlotIdx());
+		if (weapon == null)
+		{
+			return null;
+		}
+		if (Arrays.stream(SpecialWeapon.BULWARK.getItemID()).anyMatch(id -> id == weapon.getId()))
+		{
+			return SpecialWeapon.BULWARK;
+		}
+		return null;
 	}
 
 	@Subscribe
@@ -202,6 +345,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		if (!pillarsSpawned && ArrayUtils.contains(NYLOCAS_PILLAR_IDS, npc.getId()))
 		{
 			reset();
+			sidePanel.resetStallsTable();
 			pillarsSpawned = true;
 			return;
 		}
@@ -210,12 +354,32 @@ public class NyloerPlugin extends Plugin implements KeyListener
 			NyloerNpc nyloer = new NyloerNpc(npc);
 			if (!nyloer.spawn.equals("SPLIT") && lastWaveTickSpawned != client.getTickCount())
 			{
-				++waveNumber;
 				lastWaveTickSpawned = client.getTickCount();
+				++waveNumber;
 				++nyloer.waveSpawned;
 				nyloer.updateStyle(nyloer.id);
+				if (waveNumber == 1)
+				{
+					w1T = client.getTickCount();
+				}
 			}
 			nyloers.add(nyloer);
+			nyloersIndexMap.put(nyloer.index, nyloer);
+			++nylocasAliveCount;
+		}
+	}
+
+	@Subscribe
+	public void onNpcDespawned(NpcDespawned event)
+	{
+		if (!isNylocasRegion)
+		{
+			return;
+		}
+		NyloerNpc nyloer = nyloersIndexMap.remove(event.getNpc().getIndex());
+		if (nyloer != null)
+		{
+			--nylocasAliveCount;
 		}
 	}
 
@@ -239,6 +403,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		NyloerPlugin.log.debug("Starting Nyloer.");
 		customFontConfig.parse(config);
 		overlayManager.add(nyloerOverlay);
+		overlayManager.add(nyloerCountPanel);
 	}
 
 	private void stop()
@@ -246,6 +411,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		NyloerPlugin.log.debug("Stopping Nyloer.");
 		customFontConfig.getColorSettings().clear();
 		overlayManager.remove(nyloerOverlay);
+		overlayManager.remove(nyloerCountPanel);
 		reset();
 	}
 
@@ -253,6 +419,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	{
 		NyloerPlugin.log.debug("Resetting Nyloer.");
 		waveNumber = 0;
+		nylocasAliveCount = 0;
 		pillarsSpawned = false;
 		nyloers.clear();
 		nyloerOverlay.nyloers.clear();
@@ -314,6 +481,9 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		@Getter
 		private Font font;
 
+		@Getter
+		private String fontConfigKey;
+
 		public void incrementTicks()
 		{
 			++ticksAlive;
@@ -330,7 +500,6 @@ public class NyloerPlugin extends Plugin implements KeyListener
 
 		private void updateStyle(int id)
 		{
-			String fontConfigKey;
 			if (ArrayUtils.contains(MELEE_NYLOCAS_IDS, id))
 			{
 				fontConfigKey = waveSpawned + "-" + "melee";
