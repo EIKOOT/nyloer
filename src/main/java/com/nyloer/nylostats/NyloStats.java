@@ -227,7 +227,10 @@ public class NyloStats
 		else if (isNylocasVasilias(npc))
 		{
 			bossDeathT = client.getTickCount() - 2;
-			saveStats();
+			if ((bossDeathT - bossSpawnT) > 10)
+			{
+				saveStats();
+			}
 		}
 	}
 

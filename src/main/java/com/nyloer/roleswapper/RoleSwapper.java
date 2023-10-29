@@ -92,8 +92,8 @@ public class RoleSwapper
 			}
 			swaps.add(CustomSwap.fromString(customSwap));
 		}
-		swaps.add(CustomSwap.fromString("attack,verzik vitur*"));
-		swaps.add(CustomSwap.fromString("take,dawnbringer"));
+//		swaps.add(CustomSwap.fromString("attack,verzik vitur*"));
+//		swaps.add(CustomSwap.fromString("take,dawnbringer"));
 		return swaps;
 	}
 

@@ -88,18 +88,20 @@ public class NyloerSidePanel extends PluginPanel
 
 	public void addStats(Stats stats)
 	{
-		statsTableModel.addRow(new Object[]{
-			stats.totalTime,
-			stats.bossTime,
-			stats.wavesTime,
-			stats.stallCountPre,
-			stats.stallCount21,
-			stats.stallCount22to27,
-			stats.stallCount28,
-			stats.stallCount29,
-			stats.stallCount30
-		});
-		stallsTableScrollBar.setValue(stallsTableScrollBar.getMaximum() + 100);
+		statsTableModel.insertRow(
+			0,
+				new Object[]{
+				stats.totalTime,
+				stats.bossTime,
+				stats.wavesTime,
+				stats.stallCountPre,
+				stats.stallCount21,
+				stats.stallCount22to27,
+				stats.stallCount28,
+				stats.stallCount29,
+				stats.stallCount30
+			}
+			);
 	}
 
 	public void resetStallsTable()
@@ -163,6 +165,7 @@ public class NyloerSidePanel extends PluginPanel
 		stallsTable.setRowHeight(25);
 		stallsTable.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		stallsTable.setFont(new Font(NyloerFonts.DIALOG.toString(), Font.PLAIN, 14));
+		stallsTable.getTableHeader().setFont(new Font(NyloerFonts.DIALOG.toString(), Font.PLAIN, 12));
 		stallsTable.setRowSelectionAllowed(false);
 		stallsTable.setCellSelectionEnabled(false);
 		stallsTable.setShowGrid(false);
@@ -200,7 +203,7 @@ public class NyloerSidePanel extends PluginPanel
 		statsFrame.setBorder(border);
 
 		statsTable = new JTable();
-		String[] columnNames = {"Total", "Boss", "Waves", "Pre", "21", "22-27", "28", "29", "30"};
+		String[] columnNames = {"Room", "Boss", "Waves", "Pre", "21", "22-27", "28", "29", "30"};
 		statsTableModel = new DefaultTableModel(columnNames, 0);
 		statsTable.setModel(statsTableModel);
 		statsTable.getColumnModel().getColumn(0).setPreferredWidth(60);
@@ -219,7 +222,8 @@ public class NyloerSidePanel extends PluginPanel
 		statsTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		statsTable.setRowHeight(25);
 		statsTable.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		statsTable.setFont(new Font(NyloerFonts.DIALOG.toString(), Font.PLAIN, 14));
+		statsTable.setFont(new Font(NyloerFonts.ARIAL.toString(), Font.PLAIN, 14));
+		statsTable.getTableHeader().setFont(new Font(NyloerFonts.DIALOG.toString(), Font.PLAIN, 12));
 		statsTable.setRowSelectionAllowed(false);
 		statsTable.setCellSelectionEnabled(false);
 		statsTable.setShowGrid(false);
