@@ -12,18 +12,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import net.runelite.api.Client;
+import net.runelite.api.KeyCode;
 import net.runelite.api.MenuAction;
 import static net.runelite.api.MenuAction.WIDGET_TARGET_ON_NPC;
 import static net.runelite.api.MenuAction.WIDGET_TARGET_ON_PLAYER;
 import net.runelite.api.events.PostMenuSort;
 import net.runelite.api.widgets.Widget;
 import static net.runelite.api.widgets.WidgetID.SPELLBOOK_GROUP_ID;
-import net.runelite.api.widgets.WidgetInfo;
 import static net.runelite.api.MenuAction.GAME_OBJECT_FIFTH_OPTION;
 import static net.runelite.api.MenuAction.PLAYER_EIGHTH_OPTION;
 import static net.runelite.api.MenuAction.PLAYER_FIRST_OPTION;
 import net.runelite.api.MenuEntry;
-import static net.runelite.api.widgets.WidgetInfo.TO_GROUP;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.util.Text;
@@ -63,7 +62,7 @@ public class RoleSwapper
 		reloadSwaps();
 	}
 
-	private void reloadSwaps()
+	public void reloadSwaps()
 	{
 		NyloerPlugin.log.info("Reloading role swaps...");
 		clearSwaps();
@@ -90,14 +89,15 @@ public class RoleSwapper
 			{
 				continue;
 			}
+			NyloerPlugin.log.info(customSwap);
 			swaps.add(CustomSwap.fromString(customSwap));
 		}
-//		swaps.add(CustomSwap.fromString("attack,verzik vitur*"));
-//		swaps.add(CustomSwap.fromString("take,dawnbringer"));
+		swaps.add(CustomSwap.fromString("attack,verzik vitur*"));
+		swaps.add(CustomSwap.fromString("take,dawnbringer"));
 		return swaps;
 	}
 
-	@Subscribe(priority = -1)
+	@Subscribe(priority=-2)
 	public void onPostMenuSort(PostMenuSort e)
 	{
 		swapEntries();
@@ -105,6 +105,10 @@ public class RoleSwapper
 
 	public void swapEntries()
 	{
+		if (isShiftPressed())
+		{
+			return;
+		}
 		if (currentRole == null)
 		{
 			return;
@@ -217,6 +221,11 @@ public class RoleSwapper
 			return client.getVarbitValue(2176) == 1; // in building mode.
 		}
 		return false;
+	}
+
+	private boolean isShiftPressed()
+	{
+		return client.isKeyPressed(KeyCode.KC_SHIFT);
 	}
 
 	private boolean _isProtected(MenuEntry entry)

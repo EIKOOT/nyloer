@@ -81,6 +81,7 @@ public class NyloerSidePanel extends PluginPanel
 
 	public void addStall(Stall stall)
 	{
+		NyloerPlugin.log.info("Adding stall to side panel : wave-" + stall.getWave());
 		String aliveDisplay = stall.getAliveCount() + "/" + stall.getCapSize();
 		stallsTableModel.addRow(new Object[]{stall.getWave(), aliveDisplay, stall.getTotalStalls()});
 		stallsTableScrollBar.setValue(stallsTableScrollBar.getMaximum() + 100);

@@ -1,7 +1,34 @@
+/*BSD 2-Clause License
+
+Copyright (c) 2022, JaccodR
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+---
+Most of the code was modified.
+*/
+
 package com.nyloer.nylostats;
-
-import com.google.inject.Provides;
-
 import com.nyloer.NyloerConfig;
 import com.nyloer.NyloerPlugin;
 import java.util.concurrent.TimeUnit;
@@ -9,14 +36,11 @@ import javax.inject.Inject;
 import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
-import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.util.Text;
 import org.apache.commons.lang3.ArrayUtils;
-
 import java.util.*;
 import java.util.regex.Pattern;
-import org.lwjgl.system.linux.Stat;
 
 
 public class NyloStats
@@ -42,8 +66,7 @@ public class NyloStats
 	private int currCap;
 	private ArrayList<String> stallMessages;
 	private static final Pattern NYLO_COMPLETE = Pattern.compile("Wave 'The Nylocas' \\(.*\\) complete!");
-	private final int NYLOCAS_REGIONID = 13122;
-
+	private final int NYLOCAS_REGION_ID = 13122;
 
 	private static final HashMap<Integer, Integer> waveNaturalStalls;
 
@@ -113,12 +136,6 @@ public class NyloStats
 		bossRotation[0] = 1;
 	}
 
-	@Provides
-	NyloerConfig provideConfig(ConfigManager configManager)
-	{
-		return configManager.getConfig(NyloerConfig.class);
-	}
-
 	@Subscribe
 	public void onGameTick(GameTick event)
 	{
@@ -157,20 +174,22 @@ public class NyloStats
 		{
 			if (isSplit(npc))
 			{
-				if (npc.getId() == 8342 || npc.getId() == 10774 || npc.getId() == 10791)
+				switch (npc.getId())
 				{
-					splits[0]++;
+					case NpcID.NYLOCAS_ISCHYROS_8342:
+					case NpcID.NYLOCAS_ISCHYROS_10774:
+					case NpcID.NYLOCAS_ISCHYROS_10791:
+						splits[0]++;
+					case NpcID.NYLOCAS_TOXOBOLOS_8343:
+					case NpcID.NYLOCAS_TOXOBOLOS_10775:
+					case NpcID.NYLOCAS_TOXOBOLOS_10792:
+						splits[1]++;
+					case NpcID.NYLOCAS_HAGIOS:
+					case NpcID.NYLOCAS_HAGIOS_10776:
+					case NpcID.NYLOCAS_HAGIOS_10793:
+						splits[2]++;
 				}
-				else if (npc.getId() == 8343 || npc.getId() == 10775 || npc.getId() == 10792)
-				{
-					splits[1]++;
-				}
-				else if (npc.getId() == 8344 || npc.getId() == 10776 || npc.getId() == 10793)
-				{
-					splits[2]++;
-				}
-
-				if (npc.getId() == 10791 || npc.getId() == 10792 || npc.getId() == 17093)
+				if (npc.getId() == NpcID.NYLOCAS_ISCHYROS_10791 || npc.getId() == NpcID.NYLOCAS_TOXOBOLOS_10792 || npc.getId() == NpcID.NYLOCAS_HAGIOS_10793)
 				{
 					isHmt = true;
 				}
@@ -209,6 +228,7 @@ public class NyloStats
 		}
 		else if (isNylocasVasilias(npc))
 		{
+			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Boss spawned", "");
 			bossSpawnT = client.getTickCount();
 		}
 	}
@@ -226,6 +246,7 @@ public class NyloStats
 		}
 		else if (isNylocasVasilias(npc))
 		{
+			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Boss spawned", "");
 			bossDeathT = client.getTickCount() - 2;
 			if ((bossDeathT - bossSpawnT) > 10)
 			{
@@ -334,7 +355,7 @@ public class NyloStats
 			tBossSpawnWait += 4 - (tWaves % 4);
 		}
 		int tBossSpawn = tWaves + tBossSpawnWait;
-		int tBoss = bossDeathT - bossSpawnT;
+		int tBoss = bossDeathT - bossSpawnT + 2;
 		if ((tBoss % 4) != 0)
 		{
 			tBoss += 4 - (tBoss % 4);
@@ -397,7 +418,7 @@ public class NyloStats
 
 	private boolean inNyloRegion()
 	{
-		return ArrayUtils.contains(client.getMapRegions(), NYLOCAS_REGIONID);
+		return ArrayUtils.contains(client.getMapRegions(), NYLOCAS_REGION_ID);
 	}
 
 	private boolean isCapCheck()
@@ -446,22 +467,33 @@ public class NyloStats
 
 	private boolean isNylocasVasilias(NPC npc)
 	{
-		String name = npc.getName();
-		if (name == null)
+		switch (npc.getId())
 		{
-			return false;
+			case NpcID.NYLOCAS_VASILIAS:
+			case NpcID.NYLOCAS_VASILIAS_8355:
+			case NpcID.NYLOCAS_VASILIAS_10787:
+			case NpcID.NYLOCAS_VASILIAS_10808:
+			case NpcID.NYLOCAS_VASILIAS_8356:
+			case NpcID.NYLOCAS_VASILIAS_10788:
+			case NpcID.NYLOCAS_VASILIAS_10809:
+			case NpcID.NYLOCAS_VASILIAS_8357:
+			case NpcID.NYLOCAS_VASILIAS_10789:
+			case NpcID.NYLOCAS_VASILIAS_10810:
+				return true;
 		}
-		return name.equals("Nylocas Vasilias");
+		return false;
 	}
 
 	private boolean isNylocasPrinkipas(NPC npc)
 	{
-		String name = npc.getName();
-		if (name == null)
+		switch (npc.getId())
 		{
-			return false;
+			case NpcID.NYLOCAS_PRINKIPAS_10804:
+			case NpcID.NYLOCAS_PRINKIPAS_10805:
+			case NpcID.NYLOCAS_PRINKIPAS_10806:
+				return true;
 		}
-		return name.equals("Nylocas Prinkipas");
+		return false;
 	}
 
 	private int hmtWavesCheck()

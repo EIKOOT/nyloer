@@ -16,7 +16,7 @@ class Stall
 	private int capSize;
 	private  int totalStalls;
 
-	Stall(int wave, int aliveCount, int capSize, int totalStalls)
+	public Stall(int wave, int aliveCount, int capSize, int totalStalls)
 	{
 		this.wave = wave;
 		this.aliveCount = aliveCount;

@@ -2,6 +2,7 @@ package com.nyloer;
 
 import com.google.inject.Provides;
 import com.nyloer.nylostats.NyloStats;
+import com.nyloer.nylostats.Stall;
 import com.nyloer.overlays.NyloerCountPanel;
 import com.nyloer.overlays.NyloerOverlay;
 import com.nyloer.roleswapper.RoleSwapper;
@@ -35,6 +36,7 @@ import net.runelite.api.events.NpcSpawned;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.config.Keybind;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
@@ -145,6 +147,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		keyManager.registerKeyListener(this);
 		eventBus.register(roleSwapper);
 		eventBus.register(nyloStats);
+		roleSwapper.reloadSwaps();
 		start();
 	}
 
