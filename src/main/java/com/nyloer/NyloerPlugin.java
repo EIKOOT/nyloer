@@ -200,7 +200,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 
 	private void createSidePanel()
 	{
-		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/nyloer_icon.png");
+		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/ico.png");
 		sidePanel = new NyloerSidePanel(client, this, config);
 		sidePanelButton = NavigationButton.builder().tooltip("Nyloer").icon(icon).priority(6).panel(sidePanel).build();
 		clientToolbar.addNavigation(sidePanelButton);
@@ -278,7 +278,6 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		{
 			return null;
 		}
-
 		Item weapon = equipment.getItem(EquipmentInventorySlot.WEAPON.getSlotIdx());
 		if (weapon == null)
 		{

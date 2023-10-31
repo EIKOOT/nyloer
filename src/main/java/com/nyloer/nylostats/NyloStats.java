@@ -49,7 +49,6 @@ public class NyloStats
 	private NyloerPlugin plugin;
 	private NyloerConfig config;
 
-	private boolean _saveStats;
 	private final ArrayList<Stall> stallArray;
 	private int w1T;
 	private int lastNyloDeathT;
@@ -62,11 +61,10 @@ public class NyloStats
 	private int[] splits;
 	private int[] preCapSplits;
 	private int[] bossRotation;
-	private boolean isHmt;
 	private int currCap;
 	private ArrayList<String> stallMessages;
 	private static final Pattern NYLO_COMPLETE = Pattern.compile("Wave 'The Nylocas' \\(.*\\) complete!");
-	private final int NYLOCAS_REGION_ID = 13122;
+//	private final int NYLOCAS_REGION_ID = 13122;
 
 	private static final HashMap<Integer, Integer> waveNaturalStalls;
 
@@ -117,7 +115,6 @@ public class NyloStats
 		this.plugin = plugin;
 		this.config = config;
 
-		_saveStats = false;
 		stallArray = new ArrayList<Stall>();
 		w1T = -1;
 		lastNyloDeathT = -1;
@@ -127,9 +124,9 @@ public class NyloStats
 		currWave = 0;
 		ticksSinceLastWave = 0;
 		stalls = 0;
-		currCap = 12;
-		isHmt = false;
+		currCap = 8;
 		stallMessages = new ArrayList<>();
+
 		splits = new int[3];
 		preCapSplits = new int[3];
 		bossRotation = new int[3];
@@ -139,24 +136,16 @@ public class NyloStats
 	@Subscribe
 	public void onGameTick(GameTick event)
 	{
-		if (!inNyloRegion())
+		if (!plugin.isNylocasRegion())
 		{
 			return;
 		}
 		if (isCapCheck())
 		{
-			if (isHmt)
-			{
-				if (hmtWavesCheck() == 1)
-				{
-					return;
-				}
-			}
 			if (currWave > 19)
 			{
-				currCap = 24; // regular and hmt postcap is 24
+				currCap = 16;
 			}
-
 			int nylocasAliveCount = getNylocasAliveCount();
 			if (nylocasAliveCount >= currCap)
 			{
@@ -170,6 +159,12 @@ public class NyloStats
 	public void onNpcSpawned(NpcSpawned npcSpawned)
 	{
 		NPC npc = npcSpawned.getNpc();
+		if (isNylocasVasilias(npc))
+		{
+			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Boss spawned", "");
+			bossSpawnT = client.getTickCount();
+			printTicks("onNpcSpawned() BossSpawned");
+		}
 		if (isNylocas(npc))
 		{
 			if (isSplit(npc))
@@ -189,10 +184,10 @@ public class NyloStats
 					case NpcID.NYLOCAS_HAGIOS_10793:
 						splits[2]++;
 				}
-				if (npc.getId() == NpcID.NYLOCAS_ISCHYROS_10791 || npc.getId() == NpcID.NYLOCAS_TOXOBOLOS_10792 || npc.getId() == NpcID.NYLOCAS_HAGIOS_10793)
-				{
-					isHmt = true;
-				}
+//				if (npc.getId() == NpcID.NYLOCAS_ISCHYROS_10774 || npc.getId() == NpcID.NYLOCAS_TOXOBOLOS_10775 || npc.getId() == NpcID.NYLOCAS_HAGIOS_10776)
+//				{
+//					isEntry = true;
+//				}
 			}
 			else
 			{
@@ -200,23 +195,13 @@ public class NyloStats
 				{
 					if (currWave > 1 && (ticksSinceLastWave - waveNaturalStalls.get(currWave)) > 0)
 					{
-						int stallAmount = (ticksSinceLastWave - waveNaturalStalls.get(currWave)) / 4;
-
-						if (isHmt && currWave == 10)
-						{
-							stallAmount -= 2;
-						}
-						else if (isHmt && currWave == 30)
-						{
-							stallAmount -= 3;
-						}
-						stalls += stallAmount;
+						stalls += (ticksSinceLastWave - waveNaturalStalls.get(currWave)) / 4;
 					}
 					currWave++;
 					if (currWave == 1)
 					{
 						w1T = client.getTickCount();
-						_saveStats = true;
+						printTicks("w1 spawned");
 					}
 					if (currWave == 20)
 					{
@@ -225,11 +210,6 @@ public class NyloStats
 					ticksSinceLastWave = 0;
 				}
 			}
-		}
-		else if (isNylocasVasilias(npc))
-		{
-			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Boss spawned", "");
-			bossSpawnT = client.getTickCount();
 		}
 	}
 
@@ -247,32 +227,28 @@ public class NyloStats
 		else if (isNylocasVasilias(npc))
 		{
 			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Boss spawned", "");
-			bossDeathT = client.getTickCount() - 2;
-			if ((bossDeathT - bossSpawnT) > 10)
-			{
-				saveStats();
-			}
+			bossDeathT = client.getTickCount();
 		}
 	}
 
 	@Subscribe
 	public void onChatMessage(ChatMessage event)
 	{
-		if (!inNyloRegion() || event.getType() != ChatMessageType.GAMEMESSAGE)
+		if (!plugin.isNylocasRegion() || event.getType() != ChatMessageType.GAMEMESSAGE)
 		{
 			return;
 		}
-
 		String msg = Text.removeTags(event.getMessage());
 		if (NYLO_COMPLETE.matcher(msg).find())
 		{
-			if (currWave != 31)
-			{
-				reset();
-				return;
-			}
 			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Boss rotation: [<col=EF1020>" + bossRotation[0] +
 				"</col>] [<col=00FF0A>" + bossRotation[2] + "</col>] [<col=2536CA>" + bossRotation[1] + "</col>]", "");
+			saveStats();
+			reset();
+		}
+		if (event.getMessage().equals("You have failed. The vampyres take pity on you and allow you to try again..."))
+		{
+			saveStats();
 			reset();
 		}
 	}
@@ -286,12 +262,9 @@ public class NyloStats
 		}
 		int tobVar = client.getVarbitValue(Varbits.THEATRE_OF_BLOOD);
 		boolean inTob = tobVar == 2 || tobVar == 3;
-		if (!inTob)
+		if (!inTob && plugin.isNylocasRegionLast())
 		{
-			if (_saveStats)
-			{
-				saveStats();
-			}
+			saveStats();
 			reset();
 		}
 	}
@@ -300,22 +273,21 @@ public class NyloStats
 	public void onNpcChanged(NpcChanged npcChanged)
 	{
 		int npcId = npcChanged.getNpc().getId();
-
 		switch (npcId)
 		{
-			case 8355:
-			case 10787:
-			case 10808:
+			case NpcID.NYLOCAS_VASILIAS_8355:
+			case NpcID.NYLOCAS_VASILIAS_10787:
+			case NpcID.NYLOCAS_VASILIAS_10808:
 				bossRotation[0]++;
 				break;
-			case 8356:
-			case 10788:
-			case 10809:
+			case NpcID.NYLOCAS_VASILIAS_8356:
+			case NpcID.NYLOCAS_VASILIAS_10788:
+			case NpcID.NYLOCAS_VASILIAS_10809:
 				bossRotation[1]++;
 				break;
-			case 8357:
-			case 10789:
-			case 10810:
+			case NpcID.NYLOCAS_VASILIAS_8357:
+			case NpcID.NYLOCAS_VASILIAS_10789:
+			case NpcID.NYLOCAS_VASILIAS_10810:
 				bossRotation[2]++;
 				break;
 		}
@@ -335,6 +307,16 @@ public class NyloStats
 			"</col>] [<col=00FF0A>" + splits[1] + "</col>] [<col=2536CA>" + splits[2] + "</col>]", "");
 	}
 
+	private void printTicks(String src)
+	{
+		String msg = "src: " + src;
+		msg += ", w1t: " + w1T;
+		msg += ", lastNyloDeathT: " + lastNyloDeathT;
+		msg += ", bossSpawnT" + bossSpawnT;
+		msg += ", bossDeathT" + bossDeathT;
+		client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", msg, "");
+	}
+
 	private void addStall(Stall stall)
 	{
 		stallArray.add(stall);
@@ -348,19 +330,37 @@ public class NyloStats
 
 	private void saveStats()
 	{
-		int tWaves = lastNyloDeathT - w1T + 4;
-		int tBossSpawnWait = 16;
-		if ((tWaves % 4) != 0)
+		if (lastNyloDeathT == -1)
 		{
-			tBossSpawnWait += 4 - (tWaves % 4);
+			return;
 		}
-		int tBossSpawn = tWaves + tBossSpawnWait;
-		int tBoss = bossDeathT - bossSpawnT + 2;
-		if ((tBoss % 4) != 0)
+		printTicks("saveStats()");
+		int tTotal;
+		int tBoss;
+		int tBossSpawn;
+
+		if (lastNyloDeathT != -1)
 		{
-			tBoss += 4 - (tBoss % 4);
+			int tWaves = lastNyloDeathT - w1T + 4;
+			int tBossSpawnWait = 16;
+			if ((tWaves % 4) != 0)
+			{
+				tBossSpawnWait += 4 - (tWaves % 4);
+			}
+			tBossSpawn = tWaves + tBossSpawnWait;
+			tBoss = bossDeathT - bossSpawnT + 2;
+			if ((tBoss % 4) != 0)
+			{
+				tBoss += 4 - (tBoss % 4);
+			}
+			tTotal = tBossSpawn + tBoss;
 		}
-		int tTotal = tBossSpawn + tBoss;
+		else
+		{
+			tTotal = -1;
+			tBoss = -1;
+			tBossSpawn = -1;
+		}
 
 		Stats stats = new Stats(
 			ticks2Time(tTotal),
@@ -401,7 +401,6 @@ public class NyloStats
 			}
 		}
 		plugin.sidePanel.addStats(stats);
-		_saveStats = false;
 	}
 
 	private String ticks2Time(int ticks)
@@ -414,11 +413,6 @@ public class NyloStats
 			TimeUnit.MILLISECONDS.toSeconds(millis) % TimeUnit.MINUTES.toSeconds(1),
 			hundredths
 		);
-	}
-
-	private boolean inNyloRegion()
-	{
-		return ArrayUtils.contains(client.getMapRegions(), NYLOCAS_REGION_ID);
 	}
 
 	private boolean isCapCheck()
@@ -438,10 +432,6 @@ public class NyloStats
 			if (isNylocas(npc))
 			{
 				nylocasAliveCount++;
-			}
-			if (isNylocasPrinkipas(npc))
-			{
-				nylocasAliveCount += 3; // nylo prince adds 3 to the cap
 			}
 		}
 		return nylocasAliveCount;
@@ -469,55 +459,12 @@ public class NyloStats
 	{
 		switch (npc.getId())
 		{
+			case NpcID.NYLOCAS_VASILIAS_10786:
 			case NpcID.NYLOCAS_VASILIAS:
-			case NpcID.NYLOCAS_VASILIAS_8355:
-			case NpcID.NYLOCAS_VASILIAS_10787:
-			case NpcID.NYLOCAS_VASILIAS_10808:
-			case NpcID.NYLOCAS_VASILIAS_8356:
-			case NpcID.NYLOCAS_VASILIAS_10788:
-			case NpcID.NYLOCAS_VASILIAS_10809:
-			case NpcID.NYLOCAS_VASILIAS_8357:
-			case NpcID.NYLOCAS_VASILIAS_10789:
-			case NpcID.NYLOCAS_VASILIAS_10810:
+			case NpcID.NYLOCAS_VASILIAS_10807:
 				return true;
 		}
 		return false;
-	}
-
-	private boolean isNylocasPrinkipas(NPC npc)
-	{
-		switch (npc.getId())
-		{
-			case NpcID.NYLOCAS_PRINKIPAS_10804:
-			case NpcID.NYLOCAS_PRINKIPAS_10805:
-			case NpcID.NYLOCAS_PRINKIPAS_10806:
-				return true;
-		}
-		return false;
-	}
-
-	private int hmtWavesCheck()
-	{
-		if (currWave == 10)
-		{
-			int hmtWaveTen = waveNaturalStalls.get(currWave) + 8; // Hmt wave 10 has 2 additional natural stalls
-			if (!(ticksSinceLastWave >= hmtWaveTen))
-			{
-				ticksSinceLastWave++;
-				return 1;
-			}
-		}
-		else if (currWave == 30)
-		{
-			int hmtWaveThirty = waveNaturalStalls.get(currWave) + 12;    // Hmt wave 30 has 3 additional natural stalls
-			if (!(ticksSinceLastWave >= hmtWaveThirty))
-			{
-				ticksSinceLastWave++;
-				return 1;
-			}
-		}
-		currCap = 15; // hmt precap is 15
-		return 0;
 	}
 
 	private void reset()
@@ -528,12 +475,14 @@ public class NyloStats
 		bossSpawnT = -1;
 		bossDeathT = -1;
 
+//		isEntry = false;
 		currWave = 0;
 		ticksSinceLastWave = 0;
 		stalls = 0;
-		isHmt = false;
-		currCap = 12;
+//		currCap = 12;
+		currCap = 8;
 		stallMessages.clear();
+
 		splits = new int[3];
 		preCapSplits = new int[3];
 		bossRotation = new int[3];

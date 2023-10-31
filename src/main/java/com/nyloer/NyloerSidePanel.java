@@ -3,14 +3,12 @@ package com.nyloer;
 import com.nyloer.nylostats.Stall;
 import com.nyloer.nylostats.Stats;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumnModel;
-import javax.swing.table.TableModel;
 import net.runelite.api.Client;
+import net.runelite.api.Skill;
+import net.runelite.client.game.SkillIconManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
 
@@ -19,20 +17,21 @@ import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 
-
 public class NyloerSidePanel extends PluginPanel
 {
 	private final Client client;
 	private final NyloerPlugin plugin;
 	private final NyloerConfig config;
 
+	Font tableTitleFont;
+	Font buttonFont;
+	Font tableFont;
+	Font tableHeaderFont;
+
 	JButton buttonMageSwaps;
 	JButton buttonRangeSwaps;
 	JButton buttonMeleeSwaps;
 	JButton buttonCustomSwaps;
-	Font defaultFont;
-	Font selectedButtonFont;
-	Font frameTitleFont;
 
 	JTable stallsTable;
 	DefaultTableModel stallsTableModel;
@@ -48,9 +47,10 @@ public class NyloerSidePanel extends PluginPanel
 		this.client = client;
 		this.config = config;
 		this.plugin = plugin;
-		this.frameTitleFont = new Font(NyloerFonts.RUNESCAPE.toString(), Font.PLAIN, 16);
-		this.defaultFont = new Font(NyloerFonts.DIALOG.toString(), Font.PLAIN, 12);
-		this.selectedButtonFont = new Font(NyloerFonts.DIALOG.toString(), Font.PLAIN, 12);
+		this.tableTitleFont = new Font(NyloerFonts.RUNESCAPE.toString(), Font.PLAIN, 16);
+		this.buttonFont = new Font(NyloerFonts.DIALOG.toString(), Font.PLAIN, 12);
+		this.tableFont = new Font(NyloerFonts.DIALOG.toString(), Font.PLAIN, 12);
+		this.tableHeaderFont = new Font(NyloerFonts.DIALOG.toString(), Font.PLAIN, 12);
 	}
 
 	public void startPanel()
@@ -121,7 +121,7 @@ public class NyloerSidePanel extends PluginPanel
 		JPanel swapsFrame = new JPanel();
 		swapsFrame.setLayout(new GridLayout(2, 2));
 		TitledBorder border = BorderFactory.createTitledBorder(new LineBorder(Color.BLACK), "Role Swaps");
-		border.setTitleFont(frameTitleFont);
+		border.setTitleFont(tableTitleFont);
 		swapsFrame.setBorder(border);
 
 		buttonMageSwaps = new JButton("Mage");
@@ -165,8 +165,8 @@ public class NyloerSidePanel extends PluginPanel
 		stallsTable.setPreferredScrollableViewportSize(new Dimension(0, 325));
 		stallsTable.setRowHeight(25);
 		stallsTable.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		stallsTable.setFont(new Font(NyloerFonts.DIALOG.toString(), Font.PLAIN, 14));
-		stallsTable.getTableHeader().setFont(new Font(NyloerFonts.DIALOG.toString(), Font.PLAIN, 12));
+		stallsTable.setFont(tableFont);
+		stallsTable.getTableHeader().setFont(tableHeaderFont);
 		stallsTable.setRowSelectionAllowed(false);
 		stallsTable.setCellSelectionEnabled(false);
 		stallsTable.setShowGrid(false);
@@ -186,7 +186,7 @@ public class NyloerSidePanel extends PluginPanel
 			JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
 		);
 		TitledBorder border = BorderFactory.createTitledBorder(new LineBorder(Color.BLACK), "Stalls");
-		border.setTitleFont(frameTitleFont);
+		border.setTitleFont(tableTitleFont);
 		scrollPane.setBorder(border);
 		scrollPane.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		stallsTableScrollBar = scrollPane.getVerticalScrollBar();
@@ -200,7 +200,7 @@ public class NyloerSidePanel extends PluginPanel
 		BoxLayout boxLayout = new BoxLayout(statsFrame, BoxLayout.Y_AXIS);
 		statsFrame.setLayout(boxLayout);
 		TitledBorder border = BorderFactory.createTitledBorder(new LineBorder(Color.BLACK), "Recent Times");
-		border.setTitleFont(frameTitleFont);
+		border.setTitleFont(tableTitleFont);
 		statsFrame.setBorder(border);
 
 		statsTable = new JTable();
@@ -223,8 +223,8 @@ public class NyloerSidePanel extends PluginPanel
 		statsTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		statsTable.setRowHeight(25);
 		statsTable.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		statsTable.setFont(new Font(NyloerFonts.ARIAL.toString(), Font.PLAIN, 14));
-		statsTable.getTableHeader().setFont(new Font(NyloerFonts.DIALOG.toString(), Font.PLAIN, 12));
+		statsTable.setFont(tableFont);
+		statsTable.getTableHeader().setFont(tableHeaderFont);
 		statsTable.setRowSelectionAllowed(false);
 		statsTable.setCellSelectionEnabled(false);
 		statsTable.setShowGrid(false);
@@ -251,10 +251,14 @@ public class NyloerSidePanel extends PluginPanel
 		statsButtonFrame.setLayout(new GridLayout(1, 2));
 		JButton buttonCopyTable = new JButton("Copy");
 		JButton buttonClearTable = new JButton("Clear");
+		buttonCopyTable.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		buttonClearTable.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		buttonCopyTable.setFocusable(false);
 		buttonClearTable.setFocusable(false);
 		buttonCopyTable.setPreferredSize(new Dimension(40, 25));
 		buttonClearTable.setPreferredSize(new Dimension(40, 25));
+		buttonCopyTable.setFont(buttonFont);
+		buttonClearTable.setFont(buttonFont);
 		buttonCopyTable.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		buttonClearTable.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		buttonCopyTable.addActionListener(e -> _copyToClipboard(statsTable));
@@ -311,7 +315,6 @@ public class NyloerSidePanel extends PluginPanel
 
 	private void _configureMageSwaps()
 	{
-		NyloerPlugin.log.info(BorderFactory.createTitledBorder(new LineBorder(Color.BLACK), "Role Swaps").getTitleFont().toString());
 		NyloerPlugin.log.debug("Configuring mage swaps.");
 		String currentRole = plugin.roleSwapper.getCurrentRole();
 		_resetRolesSelection();
@@ -319,7 +322,7 @@ public class NyloerSidePanel extends PluginPanel
 		{
 			plugin.roleSwapper.setCurrentRole("mage");
 			buttonMageSwaps.setForeground(Color.CYAN);
-			buttonMageSwaps.setFont(selectedButtonFont);
+			buttonMageSwaps.setFont(buttonFont);
 		}
 	}
 
@@ -333,7 +336,7 @@ public class NyloerSidePanel extends PluginPanel
 			plugin.roleSwapper.setCurrentRole("range");
 			buttonRangeSwaps.setForeground(Color.GREEN);
 			buttonRangeSwaps.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-			buttonRangeSwaps.setFont(selectedButtonFont);
+			buttonRangeSwaps.setFont(buttonFont);
 		}
 	}
 
@@ -346,7 +349,7 @@ public class NyloerSidePanel extends PluginPanel
 		{
 			plugin.roleSwapper.setCurrentRole("melee");
 			buttonMeleeSwaps.setForeground(Color.WHITE);
-			buttonMeleeSwaps.setFont(selectedButtonFont);
+			buttonMeleeSwaps.setFont(buttonFont);
 		}
 	}
 
@@ -359,7 +362,7 @@ public class NyloerSidePanel extends PluginPanel
 		{
 			plugin.roleSwapper.setCurrentRole("custom");
 			buttonCustomSwaps.setForeground(Color.MAGENTA);
-			buttonCustomSwaps.setFont(selectedButtonFont);
+			buttonCustomSwaps.setFont(buttonFont);
 		}
 	}
 
@@ -372,9 +375,9 @@ public class NyloerSidePanel extends PluginPanel
 		buttonMeleeSwaps.setForeground(Color.GRAY);
 		buttonCustomSwaps.setForeground(Color.GRAY);
 
-		buttonMageSwaps.setFont(defaultFont);
-		buttonRangeSwaps.setFont(defaultFont);
-		buttonMeleeSwaps.setFont(defaultFont);
-		buttonCustomSwaps.setFont(defaultFont);
+		buttonMageSwaps.setFont(buttonFont);
+		buttonRangeSwaps.setFont(buttonFont);
+		buttonMeleeSwaps.setFont(buttonFont);
+		buttonCustomSwaps.setFont(buttonFont);
 	}
 }

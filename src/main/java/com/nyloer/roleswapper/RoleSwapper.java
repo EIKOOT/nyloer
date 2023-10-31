@@ -93,7 +93,10 @@ public class RoleSwapper
 			swaps.add(CustomSwap.fromString(customSwap));
 		}
 		swaps.add(CustomSwap.fromString("attack,verzik vitur*"));
-		swaps.add(CustomSwap.fromString("take,dawnbringer"));
+		swaps.add(CustomSwap.fromString("use,special attack"));
+		swaps.add(CustomSwap.fromString("Activate, Quick-Prayers"));
+		swaps.add(CustomSwap.fromString("Deactivate, Quick-Prayers"));
+
 		return swaps;
 	}
 
