@@ -136,6 +136,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 
 	@Getter
 	ArrayList<NyloerNpc> nyloers = new ArrayList<NyloerNpc>();
+	@Getter
 	HashMap<Integer, NyloerNpc> nyloersIndexMap = new HashMap<>();
 
 	public static final Logger log = LoggerFactory.getLogger(NyloerPlugin.class);

@@ -54,6 +54,7 @@ public class NyloStats
 	private int lastNyloDeathT;
 	private int bossSpawnT;
 	private int bossDeathT;
+	private Stats stats;
 
 	private int currWave;
 	private int stalls;
@@ -116,21 +117,9 @@ public class NyloStats
 		this.config = config;
 
 		stallArray = new ArrayList<Stall>();
-		w1T = -1;
-		lastNyloDeathT = -1;
-		bossSpawnT = -1;
-		bossDeathT = -1;
-
-		currWave = 0;
-		ticksSinceLastWave = 0;
-		stalls = 0;
-		currCap = 8;
 		stallMessages = new ArrayList<>();
 
-		splits = new int[3];
-		preCapSplits = new int[3];
-		bossRotation = new int[3];
-		bossRotation[0] = 1;
+		reset();
 	}
 
 	@Subscribe
@@ -144,7 +133,7 @@ public class NyloStats
 		{
 			if (currWave > 19)
 			{
-				currCap = 16;
+				currCap = 24;
 			}
 			int nylocasAliveCount = getNylocasAliveCount();
 			if (nylocasAliveCount >= currCap)
@@ -191,26 +180,52 @@ public class NyloStats
 			}
 			else
 			{
-				if (ticksSinceLastWave > 3)
-				{
-					if (currWave > 1 && (ticksSinceLastWave - waveNaturalStalls.get(currWave)) > 0)
-					{
-						stalls += (ticksSinceLastWave - waveNaturalStalls.get(currWave)) / 4;
-					}
-					currWave++;
-					if (currWave == 1)
-					{
-						w1T = client.getTickCount();
-						printTicks("w1 spawned");
-					}
-					if (currWave == 20)
-					{
-						preCapSplits = splits.clone();
-					}
-					ticksSinceLastWave = 0;
-				}
+				waveSpawned();
 			}
 		}
+	}
+
+	public void waveSpawned()
+	{
+		if (ticksSinceLastWave <= 3)
+		{
+			return;
+		}
+		if (currWave > 1 && (ticksSinceLastWave - waveNaturalStalls.get(currWave)) > 0)
+		{
+			stalls += (ticksSinceLastWave - waveNaturalStalls.get(currWave)) / 4;
+		}
+		currWave++;
+		if (currWave == 1)
+		{
+			w1T = client.getTickCount();
+			printTicks("w1 spawned");
+		}
+		else if (currWave == 20)
+		{
+			preCapSplits = splits.clone();
+		}
+		else if (currWave == 22)
+		{
+			stats.bigsAlive22 = getBigsAliveCount();
+		}
+		else if (currWave == 28)
+		{
+			stats.bigsAlive22 = getBigsAliveCount();
+		}
+		else if (currWave == 29)
+		{
+			stats.bigsAlive29 = getBigsAliveCount();
+		}
+		else if (currWave == 30)
+		{
+			stats.bigsAlive30 = getBigsAliveCount();
+		}
+		else if (currWave == 31)
+		{
+			stats.bigsAlive31 = getBigsAliveCount();
+		}
+		ticksSinceLastWave = 0;
 	}
 
 	@Subscribe
@@ -322,6 +337,31 @@ public class NyloStats
 		stallArray.add(stall);
 		plugin.sidePanel.addStall(stall);
 
+		if (stall.getWave() < 20)
+		{
+			stats.stallCountPre++;
+		}
+		else if (stall.getWave() == 21)
+		{
+			stats.stallCount21++;
+		}
+		else if ((stall.getWave() >= 22) && (stall.getWave() <= 27))
+		{
+			stats.stallCount22to27++;
+		}
+		else if (stall.getWave() == 28)
+		{
+			stats.stallCount28++;
+		}
+		else if (stall.getWave() == 29)
+		{
+			stats.stallCount29++;
+		}
+		else if (stall.getWave() == 30)
+		{
+			stats.stallCount30++;
+		}
+
 		String stallMsg = "Stalled wave: <col=EF1020>" + stall.getWave() + "/31</col>";
 		stallMsg += " - Nylos alive: <col=EF1020>" + stall.getAliveCount() + "/" + stall.getCapSize() + "</col>";
 		stallMsg += " - Total Stalls: <col=EF1020>" + stall.getTotalStalls() + "</col>";
@@ -348,63 +388,41 @@ public class NyloStats
 				tBossSpawnWait += 4 - (tWaves % 4);
 			}
 			tBossSpawn = tWaves + tBossSpawnWait;
-			tBoss = bossDeathT - bossSpawnT + 2;
-			if ((tBoss % 4) != 0)
+
+			if (bossDeathT != -1)
 			{
-				tBoss += 4 - (tBoss % 4);
+				tBoss = bossDeathT - bossSpawnT + 2;
+				if ((tBoss % 4) != 0)
+				{
+					tBoss += 4 - (tBoss % 4);
+				}
+				tTotal = tBossSpawn + tBoss;
 			}
-			tTotal = tBossSpawn + tBoss;
+			else
+			{
+				tBossSpawn = 0;
+				tBoss = 0;
+				tTotal = 0;
+			}
 		}
 		else
 		{
-			tTotal = -1;
-			tBoss = -1;
-			tBossSpawn = -1;
+			tTotal = 0;
+			tBoss = 0;
+			tBossSpawn = 0;
 		}
-
-		Stats stats = new Stats(
-			ticks2Time(tTotal),
-			ticks2Time(tBoss),
-			ticks2Time(tBossSpawn),
-			0,
-			0,
-			0,
-			0,
-			0,
-			0
-		);
-		for (Stall stall : stallArray)
-		{
-			if (stall.getWave() < 20)
-			{
-				stats.stallCountPre++;
-			}
-			else if (stall.getWave() == 21)
-			{
-				stats.stallCount21++;
-			}
-			else if ((stall.getWave() >= 22) && (stall.getWave() <= 27))
-			{
-				stats.stallCount22to27++;
-			}
-			else if (stall.getWave() == 28)
-			{
-				stats.stallCount28++;
-			}
-			else if (stall.getWave() == 29)
-			{
-				stats.stallCount29++;
-			}
-			else if (stall.getWave() == 30)
-			{
-				stats.stallCount30++;
-			}
-		}
+		stats.totalTime = ticks2Time(tTotal);
+		stats.bossTime = ticks2Time(tBoss);
+		stats.wavesTime = ticks2Time(tBossSpawn);
 		plugin.sidePanel.addStats(stats);
 	}
 
 	private String ticks2Time(int ticks)
 	{
+		if (ticks == 0)
+		{
+			return "";
+		}
 		int millis = ticks * 600;
 		String hundredths = String.valueOf(millis % 1000).substring(0, 1);
 		return String.format(
@@ -435,6 +453,19 @@ public class NyloStats
 			}
 		}
 		return nylocasAliveCount;
+	}
+
+	private int getBigsAliveCount()
+	{
+		int bigsAliveCount = 0;
+		for (NyloerPlugin.NyloerNpc nyloer : plugin.getNyloersIndexMap().values())
+		{
+			if (nyloer.getSize().equals("BIG"))
+			{
+				bigsAliveCount++;
+			}
+		}
+		return bigsAliveCount;
 	}
 
 	private boolean isNylocas(NPC npc)
@@ -469,6 +500,22 @@ public class NyloStats
 
 	private void reset()
 	{
+		stats = new Stats(
+			"",
+			"",
+			"",
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			-1,
+			-1,
+			-1,
+			-1
+		);
+
 		stallArray.clear();
 		w1T = -1;
 		lastNyloDeathT = -1;
@@ -479,8 +526,7 @@ public class NyloStats
 		currWave = 0;
 		ticksSinceLastWave = 0;
 		stalls = 0;
-//		currCap = 12;
-		currCap = 8;
+		currCap = 12;
 		stallMessages.clear();
 
 		splits = new int[3];
