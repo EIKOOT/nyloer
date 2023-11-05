@@ -1,5 +1,6 @@
 package com.nyloer;
 
+
 import com.nyloer.nylostats.Stall;
 import com.nyloer.nylostats.Stats;
 import java.awt.datatransfer.StringSelection;
@@ -7,8 +8,6 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import net.runelite.api.Client;
-import net.runelite.api.Skill;
-import net.runelite.client.game.SkillIconManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
 
@@ -16,6 +15,7 @@ import javax.inject.Inject;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+
 
 public class NyloerSidePanel extends PluginPanel
 {
@@ -95,16 +95,18 @@ public class NyloerSidePanel extends PluginPanel
 				stats.totalTime,
 				stats.bossTime,
 				stats.wavesTime,
-				stats.stallCountPre != 0 ? stats.stallCountPre : null,
-				stats.stallCount21 != 0 ? stats.stallCount21 : null,
-				stats.stallCount22to27 != 0 ? stats.stallCount22to27 : null,
-				stats.stallCount28 != 0 ? stats.stallCount28 : null,
-				stats.stallCount29 != 0 ? stats.stallCount29 : null,
-				stats.stallCount30 != 0 ? stats.stallCount30 : null,
-				stats.bigsAlive22,
-				stats.bigsAlive29,
-				stats.bigsAlive30,
-				stats.bigsAlive31,
+				stats.stallCountPre != 0 ? stats.stallCountPre : "",
+				stats.stallCount1to12 != 0 ? stats.stallCount1to12 : "",
+				stats.stallCount13to19 != 0 ? stats.stallCount13to19 : "",
+				stats.stallCount21 != 0 ? stats.stallCount21 : "",
+				stats.stallCount22to27 != 0 ? stats.stallCount22to27 : "",
+				stats.stallCount28 != 0 ? stats.stallCount28 : "",
+				stats.stallCount29 != 0 ? stats.stallCount29 : "",
+				stats.stallCount30 != 0 ? stats.stallCount30 : "",
+				stats.bigsAlive22 != -1 ? stats.bigsAlive22 : "",
+				stats.bigsAlive29 != -1 ? stats.bigsAlive29 : "",
+				stats.bigsAlive30 != -1 ? stats.bigsAlive30 : "",
+				stats.bigsAlive31 != -1 ? stats.bigsAlive31 : ""
 			}
 		);
 	}
@@ -208,23 +210,24 @@ public class NyloerSidePanel extends PluginPanel
 		statsFrame.setBorder(border);
 
 		statsTable = new JTable();
-		String[] columnNames = {"Room", "Boss", "Waves", "Pre", "21", "22-27", "28", "29", "30", "bigs22", "bigs28", "bigs29", "bigs30", "bigs31"};
+		String[] columnNames = {"Room", "Boss", "Waves", "Pre", "1-12", "13-19", "21", "22-27", "28", "29", "30", "bigs22", "bigs29", "bigs30", "bigs31"};
 		statsTableModel = new DefaultTableModel(columnNames, 0);
 		statsTable.setModel(statsTableModel);
 		statsTable.getColumnModel().getColumn(0).setPreferredWidth(60);
 		statsTable.getColumnModel().getColumn(1).setPreferredWidth(60);
 		statsTable.getColumnModel().getColumn(2).setPreferredWidth(60);
 		statsTable.getColumnModel().getColumn(3).setPreferredWidth(30);
-		statsTable.getColumnModel().getColumn(4).setPreferredWidth(30);
+		statsTable.getColumnModel().getColumn(4).setPreferredWidth(40);
 		statsTable.getColumnModel().getColumn(5).setPreferredWidth(40);
 		statsTable.getColumnModel().getColumn(6).setPreferredWidth(30);
-		statsTable.getColumnModel().getColumn(7).setPreferredWidth(30);
+		statsTable.getColumnModel().getColumn(7).setPreferredWidth(40);
 		statsTable.getColumnModel().getColumn(8).setPreferredWidth(30);
-		statsTable.getColumnModel().getColumn(9).setPreferredWidth(40);
-		statsTable.getColumnModel().getColumn(10).setPreferredWidth(40);
+		statsTable.getColumnModel().getColumn(9).setPreferredWidth(30);
+		statsTable.getColumnModel().getColumn(10).setPreferredWidth(30);
 		statsTable.getColumnModel().getColumn(11).setPreferredWidth(40);
 		statsTable.getColumnModel().getColumn(12).setPreferredWidth(40);
 		statsTable.getColumnModel().getColumn(13).setPreferredWidth(40);
+		statsTable.getColumnModel().getColumn(14).setPreferredWidth(40);
 
 		statsTable.getTableHeader().setReorderingAllowed(false);
 		statsTable.setDefaultEditor(Object.class, null);

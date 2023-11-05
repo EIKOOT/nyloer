@@ -2,7 +2,6 @@ package com.nyloer;
 
 import com.google.inject.Provides;
 import com.nyloer.nylostats.NyloStats;
-import com.nyloer.nylostats.Stall;
 import com.nyloer.overlays.NyloerCountPanel;
 import com.nyloer.overlays.NyloerOverlay;
 import com.nyloer.roleswapper.RoleSwapper;
@@ -36,7 +35,6 @@ import net.runelite.api.events.NpcSpawned;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
-import net.runelite.client.config.Keybind;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
@@ -96,7 +94,6 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	@Inject
 	private KeyManager keyManager;
 
-	private NavigationButton sidePanelButton;
 	public NyloerSidePanel sidePanel;
 
 	private static final int NYLOCAS_REGION_ID = 13122;
@@ -203,7 +200,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	{
 		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/ico.png");
 		sidePanel = new NyloerSidePanel(client, this, config);
-		sidePanelButton = NavigationButton.builder().tooltip("Nyloer").icon(icon).priority(6).panel(sidePanel).build();
+		NavigationButton sidePanelButton = NavigationButton.builder().tooltip("Nyloer").icon(icon).priority(6).panel(sidePanel).build();
 		clientToolbar.addNavigation(sidePanelButton);
 		sidePanel.startPanel();
 	}
@@ -364,6 +361,14 @@ public class NyloerPlugin extends Plugin implements KeyListener
 				if (waveNumber == 1)
 				{
 					w1T = client.getTickCount();
+				}
+				else if (waveNumber == 22)
+				{
+					makeDarkerT = client.getTickCount();
+				}
+				else if (waveNumber == 29)
+				{
+					makeDarkerT = client.getTickCount();
 				}
 			}
 			nyloers.add(nyloer);
@@ -547,26 +552,12 @@ public class NyloerPlugin extends Plugin implements KeyListener
 			int style;
 			if (isSplit)
 			{
-				if (config.splitFontsBold())
-				{
-					style = Font.BOLD;
-				}
-				else
-				{
-					style = Font.PLAIN;
-				}
+				style = config.splitFontsBold() ? Font.BOLD : Font.PLAIN;
 				this.font = new Font(config.splitFontsType().toString(), style, config.splitFontsSize());
 			}
 			else
 			{
-				if (config.fontsBold())
-				{
-					style = Font.BOLD;
-				}
-				else
-				{
-					style = Font.PLAIN;
-				}
+				style = config.fontsBold() ? Font.BOLD : Font.PLAIN;
 				this.font = new Font(config.fontsType().toString(), style, config.fontsSize());
 			}
 		}
@@ -646,16 +637,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 			this.ticksAlive = 0;
 			this.updateStyle(id);
 			this.configureFonts();
-
-
-			if (npc.getComposition().getSize() == 1)
-			{
-				this.size = "SMALL";
-			}
-			else
-			{
-				this.size = "BIG";
-			}
+			this.size = npc.getComposition().getSize() == 1 ? "SMALL" : "BIG";
 		}
 	}
 }

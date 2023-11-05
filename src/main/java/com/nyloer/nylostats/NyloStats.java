@@ -29,6 +29,7 @@ Most of the code was modified.
 */
 
 package com.nyloer.nylostats;
+
 import com.nyloer.NyloerConfig;
 import com.nyloer.NyloerPlugin;
 import java.util.concurrent.TimeUnit;
@@ -38,37 +39,32 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.util.Text;
-import org.apache.commons.lang3.ArrayUtils;
 import java.util.*;
 import java.util.regex.Pattern;
 
 
 public class NyloStats
 {
-	private Client client;
-	private NyloerPlugin plugin;
-	private NyloerConfig config;
+	private final Client client;
+	private final NyloerPlugin plugin;
+	private final NyloerConfig config;
 
-	private final ArrayList<Stall> stallArray;
+	private int currentWave;
+	private int capSize;
+	private int capSizePostcap;
+	private int ticksSinceLastWave;
+
+	private final ArrayList<Stall> stalls;
+	private Stats stats;
 	private int w1T;
 	private int lastNyloDeathT;
 	private int bossSpawnT;
 	private int bossDeathT;
-	private Stats stats;
 
-	private int currWave;
-	private int stalls;
-	private int ticksSinceLastWave;
-	private int[] splits;
-	private int[] preCapSplits;
-	private int[] bossRotation;
-	private int currCap;
-	private ArrayList<String> stallMessages;
-	private static final Pattern NYLO_COMPLETE = Pattern.compile("Wave 'The Nylocas' \\(.*\\) complete!");
-//	private final int NYLOCAS_REGION_ID = 13122;
+	private static final Pattern NYLO_RETRY_MESSAGE = Pattern.compile("You have failed. The vampyres take pity on you and allow you to try again...");
+	private static final Pattern NYLO_COMPLETE_MESSAGE = Pattern.compile("Wave 'The Nylocas' \\(.*\\) complete!");
 
 	private static final HashMap<Integer, Integer> waveNaturalStalls;
-
 	static
 	{
 		waveNaturalStalls = new HashMap<>();
@@ -116,10 +112,24 @@ public class NyloStats
 		this.plugin = plugin;
 		this.config = config;
 
-		stallArray = new ArrayList<Stall>();
-		stallMessages = new ArrayList<>();
-
+		stalls = new ArrayList<Stall>();
+		stats = new Stats();
 		reset();
+	}
+
+	private void reset()
+	{
+		currentWave = 0;
+		capSize = 12;
+		capSizePostcap = 24;
+		ticksSinceLastWave = 0;
+		stalls.clear();
+		stats.reset();
+
+		w1T = -1;
+		lastNyloDeathT = -1;
+		bossSpawnT = -1;
+		bossDeathT = -1;
 	}
 
 	@Subscribe
@@ -131,14 +141,10 @@ public class NyloStats
 		}
 		if (isCapCheck())
 		{
-			if (currWave > 19)
-			{
-				currCap = 24;
-			}
 			int nylocasAliveCount = getNylocasAliveCount();
-			if (nylocasAliveCount >= currCap)
+			if (nylocasAliveCount >= capSize)
 			{
-				addStall(new Stall(currWave, nylocasAliveCount, currCap, stallArray.size() + 1));
+				addStall(new Stall(currentWave, nylocasAliveCount, capSize, stalls.size() + 1));
 			}
 		}
 		ticksSinceLastWave++;
@@ -148,84 +154,18 @@ public class NyloStats
 	public void onNpcSpawned(NpcSpawned npcSpawned)
 	{
 		NPC npc = npcSpawned.getNpc();
-		if (isNylocasVasilias(npc))
+		NyloerPlugin.NyloerNpc nyloer = plugin.getNyloersIndexMap().get(npc.getIndex());
+		if (nyloer != null)
 		{
-			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Boss spawned", "");
-			bossSpawnT = client.getTickCount();
-			printTicks("onNpcSpawned() BossSpawned");
-		}
-		if (isNylocas(npc))
-		{
-			if (isSplit(npc))
-			{
-				switch (npc.getId())
-				{
-					case NpcID.NYLOCAS_ISCHYROS_8342:
-					case NpcID.NYLOCAS_ISCHYROS_10774:
-					case NpcID.NYLOCAS_ISCHYROS_10791:
-						splits[0]++;
-					case NpcID.NYLOCAS_TOXOBOLOS_8343:
-					case NpcID.NYLOCAS_TOXOBOLOS_10775:
-					case NpcID.NYLOCAS_TOXOBOLOS_10792:
-						splits[1]++;
-					case NpcID.NYLOCAS_HAGIOS:
-					case NpcID.NYLOCAS_HAGIOS_10776:
-					case NpcID.NYLOCAS_HAGIOS_10793:
-						splits[2]++;
-				}
-//				if (npc.getId() == NpcID.NYLOCAS_ISCHYROS_10774 || npc.getId() == NpcID.NYLOCAS_TOXOBOLOS_10775 || npc.getId() == NpcID.NYLOCAS_HAGIOS_10776)
-//				{
-//					isEntry = true;
-//				}
-			}
-			else
+			if ((!nyloer.isSplit()) && (ticksSinceLastWave > 3))
 			{
 				waveSpawned();
 			}
 		}
-	}
-
-	public void waveSpawned()
-	{
-		if (ticksSinceLastWave <= 3)
+		else if (isNylocasVasiliasSpawn(npc))
 		{
-			return;
+			bossSpawnT = client.getTickCount();
 		}
-		if (currWave > 1 && (ticksSinceLastWave - waveNaturalStalls.get(currWave)) > 0)
-		{
-			stalls += (ticksSinceLastWave - waveNaturalStalls.get(currWave)) / 4;
-		}
-		currWave++;
-		if (currWave == 1)
-		{
-			w1T = client.getTickCount();
-			printTicks("w1 spawned");
-		}
-		else if (currWave == 20)
-		{
-			preCapSplits = splits.clone();
-		}
-		else if (currWave == 22)
-		{
-			stats.bigsAlive22 = getBigsAliveCount();
-		}
-		else if (currWave == 28)
-		{
-			stats.bigsAlive22 = getBigsAliveCount();
-		}
-		else if (currWave == 29)
-		{
-			stats.bigsAlive29 = getBigsAliveCount();
-		}
-		else if (currWave == 30)
-		{
-			stats.bigsAlive30 = getBigsAliveCount();
-		}
-		else if (currWave == 31)
-		{
-			stats.bigsAlive31 = getBigsAliveCount();
-		}
-		ticksSinceLastWave = 0;
 	}
 
 	@Subscribe
@@ -234,15 +174,64 @@ public class NyloStats
 		NPC npc = npcDespawned.getNpc();
 		if (isNylocas(npc))
 		{
-			if (getNylocasAliveCount() == 0)
+			if (plugin.getNyloersIndexMap().size() == 0)
 			{
 				lastNyloDeathT = client.getTickCount();
 			}
 		}
-		else if (isNylocasVasilias(npc))
+		else if (isNylocasVasiliasDespawn(npc))
 		{
-			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Boss spawned", "");
 			bossDeathT = client.getTickCount();
+		}
+	}
+
+	@Subscribe
+	public void onNpcChanged(NpcChanged npcChanged)
+	{
+		int npcId = npcChanged.getNpc().getId();
+		switch(npcId)
+		{
+			case NpcID.NYLOCAS_VASILIAS_8355:
+			case NpcID.NYLOCAS_VASILIAS_10787:
+			case NpcID.NYLOCAS_VASILIAS_10808:
+				stats.bossRotation[0]++;
+				break;
+			case NpcID.NYLOCAS_VASILIAS_8356:
+			case NpcID.NYLOCAS_VASILIAS_10788:
+			case NpcID.NYLOCAS_VASILIAS_10809:
+				stats.bossRotation[1]++;
+				break;
+			case NpcID.NYLOCAS_VASILIAS_8357:
+			case NpcID.NYLOCAS_VASILIAS_10789:
+			case NpcID.NYLOCAS_VASILIAS_10810:
+				stats.bossRotation[2]++;
+				break;
+		}
+	}
+
+	public void waveSpawned()
+	{
+		currentWave++;
+		ticksSinceLastWave = 0;
+		switch (currentWave)
+		{
+			case 1:
+				w1T = client.getTickCount();
+				break;
+			case 20:
+				capSize = capSizePostcap;
+			case 22:
+				stats.bigsAlive22 = getBigsAliveCount();
+				break;
+			case 29:
+				stats.bigsAlive29 = getBigsAliveCount();
+				break;
+			case 30:
+				stats.bigsAlive30 = getBigsAliveCount();
+				break;
+			case 31:
+				stats.bigsAlive31 = getBigsAliveCount();
+				break;
 		}
 	}
 
@@ -254,16 +243,14 @@ public class NyloStats
 			return;
 		}
 		String msg = Text.removeTags(event.getMessage());
-		if (NYLO_COMPLETE.matcher(msg).find())
+		if (NYLO_COMPLETE_MESSAGE.matcher(msg).find())
 		{
-			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Boss rotation: [<col=EF1020>" + bossRotation[0] +
-				"</col>] [<col=00FF0A>" + bossRotation[2] + "</col>] [<col=2536CA>" + bossRotation[1] + "</col>]", "");
-			saveStats();
+			addStats();
 			reset();
 		}
-		if (event.getMessage().equals("You have failed. The vampyres take pity on you and allow you to try again..."))
+		else if (NYLO_RETRY_MESSAGE.matcher(msg).find())
 		{
-			saveStats();
+			addStats();
 			reset();
 		}
 	}
@@ -279,165 +266,95 @@ public class NyloStats
 		boolean inTob = tobVar == 2 || tobVar == 3;
 		if (!inTob && plugin.isNylocasRegionLast())
 		{
-			saveStats();
+			addStats();
 			reset();
 		}
 	}
 
-	@Subscribe
-	public void onNpcChanged(NpcChanged npcChanged)
-	{
-		int npcId = npcChanged.getNpc().getId();
-		switch (npcId)
-		{
-			case NpcID.NYLOCAS_VASILIAS_8355:
-			case NpcID.NYLOCAS_VASILIAS_10787:
-			case NpcID.NYLOCAS_VASILIAS_10808:
-				bossRotation[0]++;
-				break;
-			case NpcID.NYLOCAS_VASILIAS_8356:
-			case NpcID.NYLOCAS_VASILIAS_10788:
-			case NpcID.NYLOCAS_VASILIAS_10809:
-				bossRotation[1]++;
-				break;
-			case NpcID.NYLOCAS_VASILIAS_8357:
-			case NpcID.NYLOCAS_VASILIAS_10789:
-			case NpcID.NYLOCAS_VASILIAS_10810:
-				bossRotation[2]++;
-				break;
-		}
-	}
-
-	private void printSplits()
-	{
-
-		String msgCap = "Pre cap splits: [<col=EF1020>" + preCapSplits[0] +
-			"</col>] [<col=00FF0A>" + preCapSplits[1] + "</col>] [<col=2536CA>" + preCapSplits[2] + "</col>]";
-		msgCap += " Post cap splits: [<col=EF1020>" + (splits[0] - preCapSplits[0]) +
-			"</col>] [<col=00FF0A>" + (splits[1] - preCapSplits[1]) + "</col>] [<col=2536CA>" + (splits[2] - preCapSplits[2]) + "</col>]";
-
-		client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", msgCap, "");
-
-		client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Total splits: [<col=EF1020>" + splits[0] +
-			"</col>] [<col=00FF0A>" + splits[1] + "</col>] [<col=2536CA>" + splits[2] + "</col>]", "");
-	}
-
-	private void printTicks(String src)
-	{
-		String msg = "src: " + src;
-		msg += ", w1t: " + w1T;
-		msg += ", lastNyloDeathT: " + lastNyloDeathT;
-		msg += ", bossSpawnT" + bossSpawnT;
-		msg += ", bossDeathT" + bossDeathT;
-		client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", msg, "");
-	}
-
 	private void addStall(Stall stall)
 	{
-		stallArray.add(stall);
+		stalls.add(stall);
 		plugin.sidePanel.addStall(stall);
 
 		if (stall.getWave() < 20)
 		{
 			stats.stallCountPre++;
+			if (stall.getWave() < 13)
+			{
+				stats.stallCount1to12++;
+			}
+			else
+			{
+				stats.stallCount13to19++;
+			}
 		}
-		else if (stall.getWave() == 21)
+		switch (stall.getWave())
 		{
-			stats.stallCount21++;
+			case 21:
+				stats.stallCount21++;
+				break;
+			case 22:
+			case 23:
+			case 24:
+			case 26:
+			case 27:
+				stats.stallCount22to27++;
+				break;
+			case 28:
+				stats.stallCount28++;
+				break;
+			case 29:
+				stats.stallCount29++;
+				break;
+			case 30:
+				stats.stallCount30++;
+				break;
 		}
-		else if ((stall.getWave() >= 22) && (stall.getWave() <= 27))
-		{
-			stats.stallCount22to27++;
-		}
-		else if (stall.getWave() == 28)
-		{
-			stats.stallCount28++;
-		}
-		else if (stall.getWave() == 29)
-		{
-			stats.stallCount29++;
-		}
-		else if (stall.getWave() == 30)
-		{
-			stats.stallCount30++;
-		}
-
-		String stallMsg = "Stalled wave: <col=EF1020>" + stall.getWave() + "/31</col>";
-		stallMsg += " - Nylos alive: <col=EF1020>" + stall.getAliveCount() + "/" + stall.getCapSize() + "</col>";
-		stallMsg += " - Total Stalls: <col=EF1020>" + stall.getTotalStalls() + "</col>";
-		client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", stallMsg, "");
 	}
 
-	private void saveStats()
+	private void addStats()
 	{
 		if (lastNyloDeathT == -1)
 		{
 			return;
 		}
-		printTicks("saveStats()");
 		int tTotal;
 		int tBoss;
 		int tBossSpawn;
 
-		if (lastNyloDeathT != -1)
+		int tWaves = lastNyloDeathT - w1T + 4;
+		int tBossSpawnWait = 16;
+		if ((tWaves % 4) != 0)
 		{
-			int tWaves = lastNyloDeathT - w1T + 4;
-			int tBossSpawnWait = 16;
-			if ((tWaves % 4) != 0)
-			{
-				tBossSpawnWait += 4 - (tWaves % 4);
-			}
-			tBossSpawn = tWaves + tBossSpawnWait;
+			tBossSpawnWait += 4 - (tWaves % 4);
+		}
+		tBossSpawn = tWaves + tBossSpawnWait;
 
-			if (bossDeathT != -1)
+		if (bossDeathT != -1)
+		{
+			tBoss = bossDeathT - bossSpawnT + 2;
+			if ((tBoss % 4) != 0)
 			{
-				tBoss = bossDeathT - bossSpawnT + 2;
-				if ((tBoss % 4) != 0)
-				{
-					tBoss += 4 - (tBoss % 4);
-				}
-				tTotal = tBossSpawn + tBoss;
+				tBoss += 4 - (tBoss % 4);
 			}
-			else
-			{
-				tBossSpawn = 0;
-				tBoss = 0;
-				tTotal = 0;
-			}
+			tTotal = tBossSpawn + tBoss;
 		}
 		else
 		{
-			tTotal = 0;
 			tBoss = 0;
-			tBossSpawn = 0;
+			tTotal = 0;
 		}
-		stats.totalTime = ticks2Time(tTotal);
-		stats.bossTime = ticks2Time(tBoss);
-		stats.wavesTime = ticks2Time(tBossSpawn);
+		stats.totalTime = _ticks2Time(tTotal);
+		stats.bossTime = _ticks2Time(tBoss);
+		stats.wavesTime = _ticks2Time(tBossSpawn);
 		plugin.sidePanel.addStats(stats);
-	}
-
-	private String ticks2Time(int ticks)
-	{
-		if (ticks == 0)
-		{
-			return "";
-		}
-		int millis = ticks * 600;
-		String hundredths = String.valueOf(millis % 1000).substring(0, 1);
-		return String.format(
-			"%d:%02d.%s",
-			TimeUnit.MILLISECONDS.toMinutes(millis) % TimeUnit.HOURS.toMinutes(1),
-			TimeUnit.MILLISECONDS.toSeconds(millis) % TimeUnit.MINUTES.toSeconds(1),
-			hundredths
-		);
 	}
 
 	private boolean isCapCheck()
 	{
-		if ((currWave > 1) && (currWave < 31))
+		if ((currentWave > 1) && (currentWave < 31))
 		{
-			return (ticksSinceLastWave % 4 == 0) && (ticksSinceLastWave >= waveNaturalStalls.get(currWave));
+			return (ticksSinceLastWave % 4 == 0) && (ticksSinceLastWave >= waveNaturalStalls.get(currentWave));
 		}
 		return false;
 	}
@@ -486,52 +403,45 @@ public class NyloStats
 		return nyloSpawn == null;
 	}
 
-	private boolean isNylocasVasilias(NPC npc)
+	private boolean isNylocasVasiliasSpawn(NPC npc)
 	{
 		switch (npc.getId())
 		{
-			case NpcID.NYLOCAS_VASILIAS_10786:
 			case NpcID.NYLOCAS_VASILIAS:
+			case NpcID.NYLOCAS_VASILIAS_10786:
 			case NpcID.NYLOCAS_VASILIAS_10807:
 				return true;
 		}
 		return false;
 	}
 
-	private void reset()
+	private boolean isNylocasVasiliasDespawn(NPC npc)
 	{
-		stats = new Stats(
-			"",
-			"",
-			"",
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			-1,
-			-1,
-			-1,
-			-1
+		switch (npc.getId())
+		{
+			case NpcID.NYLOCAS_VASILIAS_8355:
+			case NpcID.NYLOCAS_VASILIAS_8356:
+			case NpcID.NYLOCAS_VASILIAS_8357:
+			case NpcID.NYLOCAS_VASILIAS_10786:
+			case NpcID.NYLOCAS_VASILIAS_10807:
+				return true;
+		}
+		return false;
+	}
+
+	private String _ticks2Time(int ticks)
+	{
+		if (ticks == 0)
+		{
+			return "";
+		}
+		int millis = ticks * 600;
+		String hundredths = String.valueOf(millis % 1000).substring(0, 1);
+		return String.format(
+			"%d:%02d.%s",
+			TimeUnit.MILLISECONDS.toMinutes(millis) % TimeUnit.HOURS.toMinutes(1),
+			TimeUnit.MILLISECONDS.toSeconds(millis) % TimeUnit.MINUTES.toSeconds(1),
+			hundredths
 		);
-
-		stallArray.clear();
-		w1T = -1;
-		lastNyloDeathT = -1;
-		bossSpawnT = -1;
-		bossDeathT = -1;
-
-//		isEntry = false;
-		currWave = 0;
-		ticksSinceLastWave = 0;
-		stalls = 0;
-		currCap = 12;
-		stallMessages.clear();
-
-		splits = new int[3];
-		preCapSplits = new int[3];
-		bossRotation = new int[3];
-		bossRotation[0] = 1;
 	}
 }

@@ -42,7 +42,7 @@ public class CustomFontConfig
 			}
 			catch (Exception e)
 			{
-				log.warn("Parse exception: \"" + entry + "\"\n" + e.getMessage());
+				log.debug("Parse exception: \"" + entry + "\"\n" + e.getMessage());
 			}
 		}
 		return null;

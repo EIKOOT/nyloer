@@ -100,7 +100,7 @@ public class RoleSwapper
 		return swaps;
 	}
 
-	@Subscribe(priority=-2)
+	@Subscribe(priority = -2)
 	public void onPostMenuSort(PostMenuSort e)
 	{
 		swapEntries();

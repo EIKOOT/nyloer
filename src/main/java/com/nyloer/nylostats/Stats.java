@@ -1,12 +1,8 @@
 package com.nyloer.nylostats;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 
-@RequiredArgsConstructor
-@EqualsAndHashCode
+
 public
 class Stats
 {
@@ -15,6 +11,8 @@ class Stats
 	public String wavesTime;
 
 	public int stallCountPre;
+	public int stallCount1to12;
+	public int stallCount13to19;
 	public int stallCount21;
 	public int stallCount22to27;
 	public int stallCount28;
@@ -26,36 +24,36 @@ class Stats
 	public int bigsAlive30;
 	public int bigsAlive31;
 
-	Stats(
-		String totalTime,
-		String bossTime,
-		String wavesTime,
-		int stallCountPre,
-		int stallCount21,
-		int stallCount22to27,
-		int stallCount28,
-		int stallCount29,
-		int stallCount30,
-		int bigsAlive22,
-		int bigsAlive29,
-		int bigsAlive30,
-		int bigsAlive31
-		)
+	public int[] bossRotation;
+
+	Stats()
 	{
-		this.totalTime = totalTime;
-		this.bossTime = bossTime;
-		this.wavesTime = wavesTime;
+		bossRotation = new int[3];
+		reset();
+	}
 
-		this.stallCountPre = stallCountPre;
-		this.stallCount21 = stallCount21;
-		this.stallCount22to27 = stallCount22to27;
-		this.stallCount28 = stallCount28;
-		this.stallCount29 = stallCount29;
-		this.stallCount30 = stallCount30;
+	public void reset()
+	{
+		totalTime = "";
+		bossTime = "";
+		wavesTime = "";
 
-		this.bigsAlive22 = bigsAlive22;
-		this.bigsAlive29 = bigsAlive29;
-		this.bigsAlive30 = bigsAlive30;
-		this.bigsAlive31 = bigsAlive31;
+		bossRotation[0] = 1;
+		bossRotation[1] = 0;
+		bossRotation[2] = 0;
+
+		stallCountPre = 0;
+		stallCount1to12 = 0;
+		stallCount13to19 = 0;
+		stallCount21 = 0;
+		stallCount22to27 = 0;
+		stallCount28 = 0;
+		stallCount29 = 0;
+		stallCount30 = 0;
+
+		bigsAlive22 = 0;
+		bigsAlive29 = 0;
+		bigsAlive30 = 0;
+		bigsAlive31 = 0;
 	}
 }
