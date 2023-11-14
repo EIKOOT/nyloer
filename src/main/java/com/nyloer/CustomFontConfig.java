@@ -6,13 +6,11 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.util.Text;
 
 import java.awt.Color;
-import java.util.List;
 
 
 @Slf4j
 public class CustomFontConfig
 {
-
 	private static final CustomFontConfig INSTANCE = new CustomFontConfig();
 	@Getter
 	private final HashMap<String, Color> colorSettings = new HashMap<>();
@@ -22,12 +20,12 @@ public class CustomFontConfig
 		return colorSettings.get(fontConfigKey);
 	}
 
-	public List<Color> parse(NyloerConfig config)
+	public void parse(NyloerConfig config)
 	{
 		String input = config.customFontConfig();
 		if (input == null || input.isEmpty())
 		{
-			return null;
+			return;
 		}
 		for (String entry : Text.fromCSV(input))
 		{
@@ -45,7 +43,6 @@ public class CustomFontConfig
 				log.debug("Parse exception: \"" + entry + "\"\n" + e.getMessage());
 			}
 		}
-		return null;
 	}
 
 	public static CustomFontConfig getInstance()

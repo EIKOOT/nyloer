@@ -29,7 +29,7 @@ public class NyloerOverlay extends Overlay
 	{
 		this.setPosition(OverlayPosition.DYNAMIC);
 		this.setPriority(OverlayPriority.HIGH);
-		this.setLayer(OverlayLayer.ABOVE_SCENE);
+		this.setLayer(OverlayLayer.UNDER_WIDGETS);
 		this.npcUtil = npcUtil;
 		this.plugin = plugin;
 		this.config = config;
@@ -40,7 +40,7 @@ public class NyloerOverlay extends Overlay
 	public Dimension render(Graphics2D graphics)
 	{
 		this.nyloers.clear();
-		if (this.plugin.getNyloers().isEmpty())
+		if (this.plugin.getNylocasAliveCount() == 0)
 		{
 			return null;
 		}

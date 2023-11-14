@@ -1,3 +1,31 @@
+/*
+BSD 2-Clause License
+
+Copyright (c) 2021, geheur
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 package com.nyloer.roleswapper;
 
 import com.nyloer.NyloerConfig;
@@ -43,6 +71,11 @@ public class RoleSwapper
 	final List<CustomSwap> meleeSwaps = new ArrayList<>();
 	final List<CustomSwap> customSwaps = new ArrayList<>();
 
+	final List<CustomSwap> mageShiftSwaps = new ArrayList<>();
+	final List<CustomSwap> rangeShiftSwaps = new ArrayList<>();
+	final List<CustomSwap> meleeShiftSwaps = new ArrayList<>();
+	final List<CustomSwap> customShiftSwaps = new ArrayList<>();
+
 	@Inject
 	protected RoleSwapper(NyloerPlugin plugin, NyloerConfig config)
 	{
@@ -66,21 +99,29 @@ public class RoleSwapper
 	{
 		NyloerPlugin.log.info("Reloading role swaps...");
 		clearSwaps();
-		mageSwaps.addAll(loadConfigSwaps(config.mageRoleSwaps()));
-		rangeSwaps.addAll(loadConfigSwaps(config.rangeRoleSwaps()));
-		meleeSwaps.addAll(loadConfigSwaps(config.meleeRoleSwaps()));
-		customSwaps.addAll(loadConfigSwaps(config.customRoleSwaps()));
+		mageSwaps.addAll(loadConfigSwaps(config.mageRoleSwaps(), false));
+		mageShiftSwaps.addAll(loadConfigSwaps(config.mageRoleShiftSwaps(), true));
+		rangeSwaps.addAll(loadConfigSwaps(config.rangeRoleSwaps(), false));
+		rangeShiftSwaps.addAll(loadConfigSwaps(config.rangeRoleShiftSwaps(), true));
+		meleeSwaps.addAll(loadConfigSwaps(config.meleeRoleSwaps(), false));
+		meleeShiftSwaps.addAll(loadConfigSwaps(config.meleeRoleShiftSwaps(), true));
+		customSwaps.addAll(loadConfigSwaps(config.customRoleSwaps(), false));
+		customShiftSwaps.addAll(loadConfigSwaps(config.customRoleShiftSwaps(), true));
 	}
 
 	private void clearSwaps()
 	{
 		mageSwaps.clear();
+		mageShiftSwaps.clear();
 		rangeSwaps.clear();
+		rangeShiftSwaps.clear();
 		meleeSwaps.clear();
+		meleeShiftSwaps.clear();
 		customSwaps.clear();
+		customShiftSwaps.clear();
 	}
 
-	private Collection<? extends CustomSwap> loadConfigSwaps(String customSwaps)
+	private Collection<? extends CustomSwap> loadConfigSwaps(String customSwaps, boolean shiftSwaps)
 	{
 		List<CustomSwap> swaps = new ArrayList<>();
 		for (String customSwap : customSwaps.split("\n"))
@@ -92,10 +133,13 @@ public class RoleSwapper
 			NyloerPlugin.log.info(customSwap);
 			swaps.add(CustomSwap.fromString(customSwap));
 		}
-		swaps.add(CustomSwap.fromString("attack,verzik vitur*"));
-		swaps.add(CustomSwap.fromString("use,special attack"));
-		swaps.add(CustomSwap.fromString("Activate, Quick-Prayers"));
-		swaps.add(CustomSwap.fromString("Deactivate, Quick-Prayers"));
+		if (!shiftSwaps)
+		{
+			swaps.add(CustomSwap.fromString("attack,verzik vitur*"));
+			swaps.add(CustomSwap.fromString("use,special attack"));
+			swaps.add(CustomSwap.fromString("Activate, Quick-Prayers"));
+			swaps.add(CustomSwap.fromString("Deactivate, Quick-Prayers"));
+		}
 
 		return swaps;
 	}
@@ -108,10 +152,6 @@ public class RoleSwapper
 
 	public void swapEntries()
 	{
-		if (isShiftPressed())
-		{
-			return;
-		}
 		if (currentRole == null)
 		{
 			return;
@@ -153,21 +193,33 @@ public class RoleSwapper
 
 	private List<CustomSwap> getCurrentSwaps()
 	{
-		if (currentRole.equals("mage"))
+		if (isShiftPressed())
 		{
-			return mageSwaps;
+			switch (currentRole)
+			{
+				case "mage":
+					return mageShiftSwaps;
+				case "range":
+					return rangeShiftSwaps;
+				case "melee":
+					return meleeShiftSwaps;
+				case "custom":
+					return customShiftSwaps;
+			}
 		}
-		if (currentRole.equals("range"))
+		else
 		{
-			return rangeSwaps;
-		}
-		if (currentRole.equals("melee"))
-		{
-			return meleeSwaps;
-		}
-		if (currentRole.equals("custom"))
-		{
-			return customSwaps;
+			switch (currentRole)
+			{
+				case "mage":
+					return mageSwaps;
+				case "range":
+					return rangeSwaps;
+				case "melee":
+					return meleeSwaps;
+				case "custom":
+					return customSwaps;
+			}
 		}
 		return null;
 	}

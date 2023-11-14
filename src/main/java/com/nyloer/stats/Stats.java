@@ -1,10 +1,7 @@
-package com.nyloer.nylostats;
-
-import lombok.RequiredArgsConstructor;
+package com.nyloer.stats;
 
 
-public
-class Stats
+public class Stats
 {
 	public String totalTime;
 	public String bossTime;

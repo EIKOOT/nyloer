@@ -1,9 +1,9 @@
-package com.nyloer.nylostats;
+package com.nyloer.stats;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+
 
 @Getter
 @RequiredArgsConstructor
@@ -14,7 +14,7 @@ class Stall
 	private int wave;
 	private int aliveCount;
 	private int capSize;
-	private  int totalStalls;
+	private int totalStalls;
 
 	public Stall(int wave, int aliveCount, int capSize, int totalStalls)
 	{

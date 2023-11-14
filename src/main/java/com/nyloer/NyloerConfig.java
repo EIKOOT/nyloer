@@ -118,48 +118,16 @@ public interface NyloerConfig extends Config
 		return "s";
 	}
 
-	@ConfigSection(
-		name = "Count Panel Settings",
-		position = 1,
-		description = "Count Panel Settings",
-		closedByDefault = false
-	)
-	String countPanelSettings = "countPanelSettings";
-
 	@ConfigItem(
-		position = 0,
-		keyName = "showNylocasCountPanel",
-		name = "Count panel",
-		description = "Shows number of nylocas in the room",
-		section = countPanelSettings
+		position = 8,
+		keyName = "tileHighlightWidth",
+		name = "Tile Highlight Width",
+		description = "Tile highlight width",
+		section = generalSettings
 	)
-	default boolean showNylocasCountPanel()
+	default double tileHighlightWidth()
 	{
-		return true;
-	}
-
-	@ConfigItem(
-		position = 1,
-		keyName = "nylocasCountPanelSimple",
-		name = "Simple Panel",
-		description = "Only shows numbers",
-		section = countPanelSettings
-	)
-	default boolean nylocasCountPanelSimple()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-		position = 2,
-		keyName = "nylocasCountPanelFontsSize",
-		name = "Font Size",
-		description = "Count panel font size",
-		section = countPanelSettings
-	)
-	default int nylocasCountPanelFontsSize()
-	{
-		return 10;
+		return 2;
 	}
 
 	// ------------------------------------------------------------
@@ -335,7 +303,7 @@ public interface NyloerConfig extends Config
 	}
 
 	@ConfigItem(
-		position = 13,
+		position = 14,
 		keyName = "customFontConfig",
 		name = "Font config",
 		description = "Config settings wave:melee/range/mage:color",
@@ -345,6 +313,7 @@ public interface NyloerConfig extends Config
 	{
 		return "0:mage:#00FFFF";
 	}
+
 
 	// ------------------------------------------------------------
 	@ConfigSection(
@@ -373,11 +342,60 @@ public interface NyloerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "mageRoleShiftSwaps",
+		name = "Mage Shift Swaps",
+		description = "Custom shift swaps for mage role",
+		section = roleSwapperSettings,
+		position = 1
+	)
+	default String mageRoleShiftSwaps()
+	{
+		return "/walk here,*\n" +
+			"/attack,nylocas hagios*162*";
+	}
+
+	@ConfigItem(
+		keyName = "mageHighlightMageTiles",
+		name = "Highlight Mage Tiles",
+		description = "Highlights mage nylo tiles when mage role is selected.",
+		section = roleSwapperSettings,
+		position = 2
+	)
+	default boolean mageHighlightMageTiles()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "mageHighlightRangeTiles",
+		name = "Highlight Range Tiles",
+		description = "Highlights range nylo tiles when mage role is selected.",
+		section = roleSwapperSettings,
+		position = 3
+	)
+	default boolean mageHighlightRangeTiles()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "mageHighlightMeleeTiles",
+		name = "Highlight Melee Tiles",
+		description = "Highlights melee nylo tiles when mage role is selected.",
+		section = roleSwapperSettings,
+		position = 4
+	)
+	default boolean mageHighlightMeleeTiles()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 		keyName = "rangeRoleSwaps",
 		name = "Range Swaps",
 		description = "Custom swaps for range role",
 		section = roleSwapperSettings,
-		position = 1
+		position = 5
 	)
 	default String rangeRoleSwaps()
 	{
@@ -390,11 +408,60 @@ public interface NyloerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "rangeRoleShiftSwaps",
+		name = "Range Shift Swaps",
+		description = "Custom shift swaps for range role",
+		section = roleSwapperSettings,
+		position = 6
+	)
+	default String rangeRoleShiftSwaps()
+	{
+		return "/walk here,*\n" +
+			"/attack,nylocas toxobolos*162*";
+	}
+
+	@ConfigItem(
+		keyName = "rangeHighlightMageTiles",
+		name = "Highlight Mage Tiles",
+		description = "Highlights mage nylo tiles when range role is selected.",
+		section = roleSwapperSettings,
+		position = 7
+	)
+	default boolean rangeHighlightMageTiles()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "rangeHighlightRangeTiles",
+		name = "Highlight Range Tiles",
+		description = "Highlights range nylo tiles when range role is selected.",
+		section = roleSwapperSettings,
+		position = 8
+	)
+	default boolean rangeHighlightRangeTiles()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "rangeHighlightMeleeTiles",
+		name = "Highlight Melee Tiles",
+		description = "Highlights melee nylo tiles when range role is selected.",
+		section = roleSwapperSettings,
+		position = 9
+	)
+	default boolean rangeHighlightMeleeTiles()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 		keyName = "meleeRoleSwaps",
 		name = "Melee Swaps",
 		description = "Custom swaps for melee role",
 		section = roleSwapperSettings,
-		position = 2
+		position = 10
 	)
 	default String meleeRoleSwaps()
 	{
@@ -407,11 +474,60 @@ public interface NyloerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "meleeRoleShiftSwaps",
+		name = "Melee Shift Swaps",
+		description = "Custom shift swaps for melee role",
+		section = roleSwapperSettings,
+		position = 11
+	)
+	default String meleeRoleShiftSwaps()
+	{
+		return "/walk here,*\n" +
+			"/attack,nylocas ischyros*162*";
+	}
+
+	@ConfigItem(
+		keyName = "meleeHighlightMageTiles",
+		name = "Highlight Mage Tiles",
+		description = "Highlights mage nylo tiles when melee role is selected.",
+		section = roleSwapperSettings,
+		position = 12
+	)
+	default boolean meleeHighlightMageTiles()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "meleeHighlightRangeTiles",
+		name = "Highlight Range Tiles",
+		description = "Highlights range nylo tiles when melee role is selected.",
+		section = roleSwapperSettings,
+		position = 13
+	)
+	default boolean meleeHighlightRangeTiles()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "meleeHighlightMeleeTiles",
+		name = "Highlight Melee Tiles",
+		description = "Highlights melee nylo tiles when melee role is selected.",
+		section = roleSwapperSettings,
+		position = 14
+	)
+	default boolean meleeHighlightMeleeTiles()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 		keyName = "customRoleSwaps",
 		name = "Custom Swaps",
 		description = "Custom swaps for Custom role",
 		section = roleSwapperSettings,
-		position = 3
+		position = 15
 	)
 	default String customRoleSwaps()
 	{
@@ -423,5 +539,53 @@ public interface NyloerConfig extends Config
 			"attack,nylocas ischyros*162*";
 	}
 
+	@ConfigItem(
+		keyName = "customRoleShiftSwaps",
+		name = "Custom Shift Swaps",
+		description = "Custom shift swaps for Custom role",
+		section = roleSwapperSettings,
+		position = 16
+	)
+	default String customRoleShiftSwaps()
+	{
+		return "/walk here,*\n" +
+			"/attack,nylocas hagios*162*";
+	}
+
+	@ConfigItem(
+		keyName = "customHighlightMageTiles",
+		name = "Highlight Mage Tiles",
+		description = "Highlights mage nylo tiles when custom role is selected.",
+		section = roleSwapperSettings,
+		position = 17
+	)
+	default boolean customHighlightMageTiles()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "customHighlightRangeTiles",
+		name = "Highlight Range Tiles",
+		description = "Highlights range nylo tiles when custom role is selected.",
+		section = roleSwapperSettings,
+		position = 18
+	)
+	default boolean customHighlightRangeTiles()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "customHighlightMeleeTiles",
+		name = "Highlight Melee Tiles",
+		description = "Highlights melee nylo tiles when custom role is selected.",
+		section = roleSwapperSettings,
+		position = 19
+	)
+	default boolean customHighlightMeleeTiles()
+	{
+		return false;
+	}
 
 }

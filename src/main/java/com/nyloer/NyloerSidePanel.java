@@ -1,8 +1,8 @@
 package com.nyloer;
 
 
-import com.nyloer.nylostats.Stall;
-import com.nyloer.nylostats.Stats;
+import com.nyloer.stats.Stall;
+import com.nyloer.stats.Stats;
 import java.awt.datatransfer.StringSelection;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -333,6 +333,10 @@ public class NyloerSidePanel extends PluginPanel
 		if ((currentRole == null) || (!currentRole.equals("mage")))
 		{
 			plugin.roleSwapper.setCurrentRole("mage");
+			plugin.nyloerTileOverlay.setRenderMage(config.mageHighlightMageTiles());
+			plugin.nyloerTileOverlay.setRenderRange(config.mageHighlightRangeTiles());
+			plugin.nyloerTileOverlay.setRenderMelee(config.mageHighlightMeleeTiles());
+
 			buttonMageSwaps.setForeground(Color.CYAN);
 			buttonMageSwaps.setFont(buttonFont);
 		}
@@ -346,8 +350,11 @@ public class NyloerSidePanel extends PluginPanel
 		if ((currentRole == null) || (!currentRole.equals("range")))
 		{
 			plugin.roleSwapper.setCurrentRole("range");
+			plugin.nyloerTileOverlay.setRenderMage(config.rangeHighlightMageTiles());
+			plugin.nyloerTileOverlay.setRenderRange(config.rangeHighlightRangeTiles());
+			plugin.nyloerTileOverlay.setRenderMelee(config.rangeHighlightMeleeTiles());
+
 			buttonRangeSwaps.setForeground(Color.GREEN);
-			buttonRangeSwaps.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 			buttonRangeSwaps.setFont(buttonFont);
 		}
 	}
@@ -360,6 +367,10 @@ public class NyloerSidePanel extends PluginPanel
 		if ((currentRole == null) || (!currentRole.equals("melee")))
 		{
 			plugin.roleSwapper.setCurrentRole("melee");
+			plugin.nyloerTileOverlay.setRenderMage(config.meleeHighlightMageTiles());
+			plugin.nyloerTileOverlay.setRenderRange(config.meleeHighlightRangeTiles());
+			plugin.nyloerTileOverlay.setRenderMelee(config.meleeHighlightMeleeTiles());
+
 			buttonMeleeSwaps.setForeground(Color.WHITE);
 			buttonMeleeSwaps.setFont(buttonFont);
 		}
@@ -373,6 +384,10 @@ public class NyloerSidePanel extends PluginPanel
 		if ((currentRole == null) || (!currentRole.equals("custom")))
 		{
 			plugin.roleSwapper.setCurrentRole("custom");
+			plugin.nyloerTileOverlay.setRenderMage(config.customHighlightMageTiles());
+			plugin.nyloerTileOverlay.setRenderRange(config.customHighlightRangeTiles());
+			plugin.nyloerTileOverlay.setRenderMelee(config.customHighlightMeleeTiles());
+
 			buttonCustomSwaps.setForeground(Color.MAGENTA);
 			buttonCustomSwaps.setFont(buttonFont);
 		}
@@ -382,11 +397,14 @@ public class NyloerSidePanel extends PluginPanel
 	{
 		plugin.roleSwapper.setCurrentRole(null);
 
+		plugin.nyloerTileOverlay.setRenderMage(false);
+		plugin.nyloerTileOverlay.setRenderRange(false);
+		plugin.nyloerTileOverlay.setRenderMelee(false);
+
 		buttonMageSwaps.setForeground(Color.GRAY);
 		buttonRangeSwaps.setForeground(Color.GRAY);
 		buttonMeleeSwaps.setForeground(Color.GRAY);
 		buttonCustomSwaps.setForeground(Color.GRAY);
-
 		buttonMageSwaps.setFont(buttonFont);
 		buttonRangeSwaps.setFont(buttonFont);
 		buttonMeleeSwaps.setFont(buttonFont);

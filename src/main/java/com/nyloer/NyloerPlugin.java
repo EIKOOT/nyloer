@@ -1,38 +1,28 @@
 package com.nyloer;
 
 import com.google.inject.Provides;
-import com.nyloer.nylostats.NyloStats;
-import com.nyloer.overlays.NyloerCountPanel;
+import com.nyloer.stats.StatsHandler;
 import com.nyloer.overlays.NyloerOverlay;
+import com.nyloer.overlays.NyloerTileOverlay;
 import com.nyloer.roleswapper.RoleSwapper;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import javax.inject.Inject;
 import lombok.Getter;
 import lombok.Setter;
-import net.runelite.api.Actor;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
-import net.runelite.api.EquipmentInventorySlot;
 import net.runelite.api.GameState;
-import net.runelite.api.Hitsplat;
-import net.runelite.api.InventoryID;
-import net.runelite.api.Item;
-import net.runelite.api.ItemContainer;
 import net.runelite.api.NPC;
-import net.runelite.api.VarPlayer;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
-import net.runelite.api.events.HitsplatApplied;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.NpcSpawned;
-import net.runelite.api.events.VarbitChanged;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
@@ -41,7 +31,6 @@ import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.NpcUtil;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.plugins.specialcounter.SpecialWeapon;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.ui.overlay.OverlayManager;
@@ -62,6 +51,9 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	public Client client;
 
 	@Inject
+	public ClientThread clientThread;
+
+	@Inject
 	private ClientToolbar clientToolbar;
 
 	@Inject
@@ -74,7 +66,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	public RoleSwapper roleSwapper;
 
 	@Inject
-	public NyloStats nyloStats;
+	public StatsHandler statsHandler;
 
 	@Inject
 	public CustomFontConfig customFontConfig;
@@ -89,7 +81,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	private NyloerOverlay nyloerOverlay;
 
 	@Inject
-	private NyloerCountPanel nyloerCountPanel;
+	public NyloerTileOverlay nyloerTileOverlay;
 
 	@Inject
 	private KeyManager keyManager;
@@ -144,7 +136,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		createSidePanel();
 		keyManager.registerKeyListener(this);
 		eventBus.register(roleSwapper);
-		eventBus.register(nyloStats);
+		eventBus.register(statsHandler);
 		roleSwapper.reloadSwaps();
 		start();
 	}
@@ -155,7 +147,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		stop();
 		keyManager.unregisterKeyListener(this);
 		eventBus.unregister(roleSwapper);
-		eventBus.unregister(nyloStats);
+		eventBus.unregister(statsHandler);
 	}
 
 	@Override
@@ -203,89 +195,6 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		NavigationButton sidePanelButton = NavigationButton.builder().tooltip("Nyloer").icon(icon).priority(6).panel(sidePanel).build();
 		clientToolbar.addNavigation(sidePanelButton);
 		sidePanel.startPanel();
-	}
-
-	@Inject
-	private ClientThread clientThread;
-	private int specialPercentage;
-	private Hitsplat lastSpecHitsplat;
-	private NPC lastSpecTarget;
-	private SpecialWeapon specialWeapon;
-	private int hitsplatTick;
-
-	@Subscribe
-	public void onHitsplatApplied(HitsplatApplied hitsplatApplied)
-	{
-		Actor target = hitsplatApplied.getActor();
-		Hitsplat hitsplat = hitsplatApplied.getHitsplat();
-		if (!hitsplat.isMine() || target == client.getLocalPlayer())
-		{
-			return;
-		}
-		NPC npc = target instanceof NPC ? (NPC) target : null;
-		if (npc == null)
-		{
-			return;
-		}
-		NyloerNpc nyloerNpc = nyloersIndexMap.get(npc.getIndex());
-		if (nyloerNpc == null)
-		{
-			return;
-		}
-		if (hitsplatTick == client.getTickCount())
-		{
-			if ((ArrayUtils.contains(MAGE_NYLOCAS_IDS, npc.getId())) || (ArrayUtils.contains(RANGE_NYLOCAS_IDS, npc.getId())))
-			{
-				nyloerNpc.colorDarker = true;
-			}
-		}
-	}
-
-	@Subscribe
-	public void onVarbitChanged(VarbitChanged event)
-	{
-		if (event.getVarpId() != VarPlayer.SPECIAL_ATTACK_PERCENT)
-		{
-			return;
-		}
-		int specialPercentage = event.getValue();
-		if (this.specialPercentage == -1 || specialPercentage >= this.specialPercentage)
-		{
-			this.specialPercentage = specialPercentage;
-			return;
-		}
-		this.specialPercentage = specialPercentage;
-		final int serverTicks = client.getTickCount();
-		clientThread.invokeLater(() ->
-		{
-			this.specialWeapon = usedSpecialWeapon();
-			if (this.specialWeapon == null)
-			{
-				return;
-			}
-			Actor target = client.getLocalPlayer().getInteracting();
-			lastSpecTarget = target instanceof NPC ? (NPC) target : null;
-			hitsplatTick = serverTicks + 1;
-		});
-	}
-
-	private SpecialWeapon usedSpecialWeapon()
-	{
-		ItemContainer equipment = client.getItemContainer(InventoryID.EQUIPMENT);
-		if (equipment == null)
-		{
-			return null;
-		}
-		Item weapon = equipment.getItem(EquipmentInventorySlot.WEAPON.getSlotIdx());
-		if (weapon == null)
-		{
-			return null;
-		}
-		if (Arrays.stream(SpecialWeapon.BULWARK.getItemID()).anyMatch(id -> id == weapon.getId()))
-		{
-			return SpecialWeapon.BULWARK;
-		}
-		return null;
 	}
 
 	@Subscribe
@@ -373,7 +282,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 			}
 			nyloers.add(nyloer);
 			nyloersIndexMap.put(nyloer.index, nyloer);
-			++nylocasAliveCount;
+			updateNylocasAliveCount();
 		}
 	}
 
@@ -387,7 +296,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		NyloerNpc nyloer = nyloersIndexMap.remove(event.getNpc().getIndex());
 		if (nyloer != null)
 		{
-			--nylocasAliveCount;
+			updateNylocasAliveCount();
 		}
 	}
 
@@ -411,7 +320,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		NyloerPlugin.log.debug("Starting Nyloer.");
 		customFontConfig.parse(config);
 		overlayManager.add(nyloerOverlay);
-		overlayManager.add(nyloerCountPanel);
+		overlayManager.add(nyloerTileOverlay);
 	}
 
 	private void stop()
@@ -419,7 +328,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		NyloerPlugin.log.debug("Stopping Nyloer.");
 		customFontConfig.getColorSettings().clear();
 		overlayManager.remove(nyloerOverlay);
-		overlayManager.remove(nyloerCountPanel);
+		overlayManager.remove(nyloerTileOverlay);
 		reset();
 	}
 
@@ -438,6 +347,11 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		isNylocasRegion = ArrayUtils.contains(client.getMapRegions(), NYLOCAS_REGION_ID);
 	}
 
+	private void updateNylocasAliveCount()
+	{
+		nylocasAliveCount = nyloersIndexMap.size();
+	}
+
 	public class NyloerNpc
 	{
 		@Getter
@@ -448,6 +362,9 @@ public class NyloerPlugin extends Plugin implements KeyListener
 
 		@Getter
 		private int lastId;
+
+		@Getter
+		private String style;
 
 		@Getter
 		private int index;
@@ -510,6 +427,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		{
 			if (ArrayUtils.contains(MELEE_NYLOCAS_IDS, id))
 			{
+				style = "melee";
 				fontConfigKey = waveSpawned + "-" + "melee";
 				color = config.meleeNylocasColor();
 				outlineColor = config.meleeNylocasOutlineColor();
@@ -517,6 +435,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 			}
 			else if (ArrayUtils.contains(RANGE_NYLOCAS_IDS, id))
 			{
+				style = "range";
 				fontConfigKey = waveSpawned + "-" + "range";
 				color = config.rangeNylocasColor();
 				outlineColor = config.rangeNylocasOutlineColor();
@@ -524,6 +443,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 			}
 			else if (ArrayUtils.contains(MAGE_NYLOCAS_IDS, id))
 			{
+				style = "mage";
 				fontConfigKey = waveSpawned + "-" + "mage";
 				color = config.mageNylocasColor();
 				outlineColor = config.mageNylocasOutlineColor();
