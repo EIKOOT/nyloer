@@ -14,7 +14,6 @@ repositories {
 def runeLiteVersion = 'latest.release'
 //def runeLiteVersion = '1.10.16.1'
 dependencies {
-    implementation 'net.jcip:jcip-annotations:1.0'
     compileOnly group: 'net.runelite', name: 'client', version: runeLiteVersion
 
     compileOnly 'org.projectlombok:lombok:1.18.20'
