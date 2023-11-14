@@ -275,7 +275,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 				{
 					makeDarkerT = client.getTickCount();
 				}
-				else if (waveNumber == 29)
+				else if (waveNumber == 28)
 				{
 					makeDarkerT = client.getTickCount();
 				}

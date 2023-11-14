@@ -25,20 +25,10 @@ dependencies {
     testImplementation group: 'net.runelite', name: 'jshell', version: runeLiteVersion
 }
 
-group = 'com.charges'
+group = 'com.nyloer'
 version = '1.0'
-
-tasks.withType(Copy).all { duplicatesStrategy 'exclude' }
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
     options.release.set(11)
-}
-
-shadowJar {
-    from sourceSets.test.output
-    configurations = [project.configurations.testRuntimeClasspath]
-    manifest {
-        attributes "Main-Class": "com.nyloer.NyloerTest"
-    }
 }
