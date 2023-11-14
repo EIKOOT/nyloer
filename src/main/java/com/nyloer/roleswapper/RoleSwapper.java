@@ -46,7 +46,7 @@ import static net.runelite.api.MenuAction.WIDGET_TARGET_ON_NPC;
 import static net.runelite.api.MenuAction.WIDGET_TARGET_ON_PLAYER;
 import net.runelite.api.events.PostMenuSort;
 import net.runelite.api.widgets.Widget;
-import static net.runelite.api.widgets.WidgetID.SPELLBOOK_GROUP_ID;
+import static net.runelite.api.widgets.InterfaceID.SPELLBOOK;
 import static net.runelite.api.MenuAction.GAME_OBJECT_FIFTH_OPTION;
 import static net.runelite.api.MenuAction.PLAYER_EIGHTH_OPTION;
 import static net.runelite.api.MenuAction.PLAYER_FIRST_OPTION;
@@ -289,7 +289,7 @@ public class RoleSwapper
 		if (type == WIDGET_TARGET_ON_PLAYER || type == WIDGET_TARGET_ON_NPC)
 		{
 			Widget selectedWidget = client.getSelectedWidget();
-			if ((selectedWidget != null) && (selectedWidget.getId() == SPELLBOOK_GROUP_ID))
+			if ((selectedWidget != null) && (selectedWidget.getId() == SPELLBOOK))
 			{
 				return true;
 			}
