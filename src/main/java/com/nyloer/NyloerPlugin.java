@@ -271,14 +271,6 @@ public class NyloerPlugin extends Plugin implements KeyListener
 				{
 					w1T = client.getTickCount();
 				}
-				else if (waveNumber == 22)
-				{
-					makeDarkerT = client.getTickCount();
-				}
-				else if (waveNumber == 28)
-				{
-					makeDarkerT = client.getTickCount();
-				}
 			}
 			nyloers.add(nyloer);
 			nyloersIndexMap.put(nyloer.index, nyloer);
