@@ -87,6 +87,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	private KeyManager keyManager;
 
 	public NyloerSidePanel sidePanel;
+	public NavigationButton sidePanelButton;
 
 	private static final int NYLOCAS_REGION_ID = 13122;
 	private final int[] NYLOCAS_PILLAR_IDS = {8358, 10811, 10790};
@@ -144,6 +145,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	@Override
 	protected void shutDown() throws Exception
 	{
+		removeSidePanel();
 		stop();
 		keyManager.unregisterKeyListener(this);
 		eventBus.unregister(roleSwapper);
@@ -192,9 +194,14 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	{
 		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/ico.png");
 		sidePanel = new NyloerSidePanel(client, this, config);
-		NavigationButton sidePanelButton = NavigationButton.builder().tooltip("Nyloer").icon(icon).priority(6).panel(sidePanel).build();
+		sidePanelButton = NavigationButton.builder().tooltip("Nyloer").icon(icon).priority(6).panel(sidePanel).build();
 		clientToolbar.addNavigation(sidePanelButton);
 		sidePanel.startPanel();
+	}
+
+	private void removeSidePanel()
+	{
+		clientToolbar.removeNavigation(sidePanelButton);
 	}
 
 	@Subscribe
