@@ -32,7 +32,6 @@ public class CustomFontConfig
 			try
 			{
 				String[] parts = entry.split(":");
-				log.info(Integer.parseInt(parts[0].trim()) + "-" + parts[1].trim() + " -> " + Color.decode(parts[2].trim()).toString());
 				colorSettings.put(
 					Integer.parseInt(parts[0].trim()) + "-" + parts[1].trim(),
 					Color.decode(parts[2].trim())

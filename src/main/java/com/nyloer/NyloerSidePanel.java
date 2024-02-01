@@ -81,7 +81,6 @@ public class NyloerSidePanel extends PluginPanel
 
 	public void addStall(Stall stall)
 	{
-		NyloerPlugin.log.info("Adding stall to side panel : wave-" + stall.getWave());
 		String aliveDisplay = stall.getAliveCount() + "/" + stall.getCapSize();
 		stallsTableModel.addRow(new Object[]{stall.getWave(), aliveDisplay, stall.getTotalStalls()});
 		stallsTableScrollBar.setValue(stallsTableScrollBar.getMaximum() + 100);
@@ -154,7 +153,23 @@ public class NyloerSidePanel extends PluginPanel
 		swapsFrame.add(buttonMeleeSwaps);
 		swapsFrame.add(buttonRangeSwaps);
 		swapsFrame.add(buttonCustomSwaps);
-		_resetRolesSelection();
+		switch (config.previousRole())
+		{
+			case "mage":
+				_configureMageSwaps();
+				break;
+			case "range":
+				_configureRangeSwaps();
+				break;
+			case "melee":
+				_configureMeleeSwaps();
+				break;
+			case "custom":
+				_configureCustomSwaps();
+				break;
+			default:
+				_resetRolesSelection();
+		}
 
 		return swapsFrame;
 	}
@@ -332,6 +347,7 @@ public class NyloerSidePanel extends PluginPanel
 		_resetRolesSelection();
 		if ((currentRole == null) || (!currentRole.equals("mage")))
 		{
+			config.setPreviousRole("mage");
 			plugin.roleSwapper.setCurrentRole("mage");
 			plugin.nyloerTileOverlay.setRenderMage(config.mageHighlightMageTiles());
 			plugin.nyloerTileOverlay.setRenderRange(config.mageHighlightRangeTiles());
@@ -349,6 +365,7 @@ public class NyloerSidePanel extends PluginPanel
 		_resetRolesSelection();
 		if ((currentRole == null) || (!currentRole.equals("range")))
 		{
+			config.setPreviousRole("range");
 			plugin.roleSwapper.setCurrentRole("range");
 			plugin.nyloerTileOverlay.setRenderMage(config.rangeHighlightMageTiles());
 			plugin.nyloerTileOverlay.setRenderRange(config.rangeHighlightRangeTiles());
@@ -366,6 +383,7 @@ public class NyloerSidePanel extends PluginPanel
 		_resetRolesSelection();
 		if ((currentRole == null) || (!currentRole.equals("melee")))
 		{
+			config.setPreviousRole("melee");
 			plugin.roleSwapper.setCurrentRole("melee");
 			plugin.nyloerTileOverlay.setRenderMage(config.meleeHighlightMageTiles());
 			plugin.nyloerTileOverlay.setRenderRange(config.meleeHighlightRangeTiles());
@@ -383,6 +401,7 @@ public class NyloerSidePanel extends PluginPanel
 		_resetRolesSelection();
 		if ((currentRole == null) || (!currentRole.equals("custom")))
 		{
+			config.setPreviousRole("custom");
 			plugin.roleSwapper.setCurrentRole("custom");
 			plugin.nyloerTileOverlay.setRenderMage(config.customHighlightMageTiles());
 			plugin.nyloerTileOverlay.setRenderRange(config.customHighlightRangeTiles());
@@ -395,6 +414,7 @@ public class NyloerSidePanel extends PluginPanel
 
 	private void _resetRolesSelection()
 	{
+		config.setPreviousRole("");
 		plugin.roleSwapper.setCurrentRole(null);
 
 		plugin.nyloerTileOverlay.setRenderMage(false);

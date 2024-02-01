@@ -97,7 +97,6 @@ public class RoleSwapper
 
 	public void reloadSwaps()
 	{
-		NyloerPlugin.log.info("Reloading role swaps...");
 		clearSwaps();
 		mageSwaps.addAll(loadConfigSwaps(config.mageRoleSwaps(), false));
 		mageShiftSwaps.addAll(loadConfigSwaps(config.mageRoleShiftSwaps(), true));
@@ -130,7 +129,6 @@ public class RoleSwapper
 			{
 				continue;
 			}
-			NyloerPlugin.log.info(customSwap);
 			swaps.add(CustomSwap.fromString(customSwap));
 		}
 		if (!shiftSwaps)

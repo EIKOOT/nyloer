@@ -162,7 +162,6 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	{
 		if (config.makeDarkerHotkey().matches(e))
 		{
-			NyloerPlugin.log.debug("Making nyloers darker...");
 			makeDarkerT = this.client.getTickCount() - 1;
 			makeDarkerT -= (makeDarkerT - w1T) % 4;
 		}

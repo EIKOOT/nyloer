@@ -588,4 +588,22 @@ public interface NyloerConfig extends Config
 		return false;
 	}
 
+	@ConfigItem(
+		keyName = "previousRole",
+		name = "",
+		description = "",
+		hidden = true
+	)
+	default String previousRole()
+	{
+		return "";
+	}
+
+	@ConfigItem(
+		keyName = "previousRole",
+		name = "",
+		description = "",
+		hidden = true
+	)
+	void setPreviousRole(String role);
 }
