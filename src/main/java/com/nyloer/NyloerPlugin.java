@@ -139,12 +139,10 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		if(config.showSidePanelNyloOnly() == true && isNylocasRegion)
 		{
 			createSidePanel();
-			isSidePanelShown = true;
 		}
 		else
 		{
 			createSidePanel();
-			isSidePanelShown = true;
 		}
 		keyManager.registerKeyListener(this);
 		eventBus.register(roleSwapper);
@@ -157,7 +155,6 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	protected void shutDown() throws Exception
 	{
 		removeSidePanel();
-		isSidePanelShown = false;
 		stop();
 		keyManager.unregisterKeyListener(this);
 		eventBus.unregister(roleSwapper);
@@ -213,11 +210,13 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		sidePanelButton = NavigationButton.builder().tooltip("Nyloer").icon(icon).priority(6).panel(sidePanel).build();
 		clientToolbar.addNavigation(sidePanelButton);
 		sidePanel.startPanel();
+		isSidePanelShown = true;
 	}
 
 	private void removeSidePanel()
 	{
 		clientToolbar.removeNavigation(sidePanelButton);
+		isSidePanelShown = false;
 	}
 
 	@Subscribe
@@ -370,12 +369,10 @@ public class NyloerPlugin extends Plugin implements KeyListener
 			if(isSidePanelShown == false && isNylocasRegion == true)
 			{
 				createSidePanel();
-				isSidePanelShown = true;
 			}
 			else if(isSidePanelShown == true && isNylocasRegion == false)
 			{
 				removeSidePanel();
-				isSidePanelShown = false;
 			}
 		}
 		else
@@ -383,7 +380,6 @@ public class NyloerPlugin extends Plugin implements KeyListener
 			if(isSidePanelShown == false)
 			{
 				createSidePanel();
-				isSidePanelShown = true;
 			}
 		}
 	}
