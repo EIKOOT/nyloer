@@ -107,6 +107,8 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	@Getter
 	private boolean isNylocasRegionLast = false;
 
+	private boolean isSidePanelShown = false;
+
 	@Getter
 	private boolean pillarsSpawned;
 
@@ -134,7 +136,14 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	@Override
 	protected void startUp() throws Exception
 	{
-		createSidePanel();
+		if(config.showSidePanelNyloOnly() == true && isNylocasRegion)
+		{
+			createSidePanel();
+		}
+		else
+		{
+			createSidePanel();
+		}
 		keyManager.registerKeyListener(this);
 		eventBus.register(roleSwapper);
 		eventBus.register(statsHandler);
@@ -187,6 +196,11 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		}
 		customFontConfig.getColorSettings().clear();
 		customFontConfig.parse(config);
+		if(configChanged.getGroup().equals(NyloerConfig.generalSettings))
+		{
+			updateNylocasRegion();
+			updateSidePanel();
+		}
 	}
 
 	private void createSidePanel()
@@ -196,11 +210,13 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		sidePanelButton = NavigationButton.builder().tooltip("Nyloer").icon(icon).priority(6).panel(sidePanel).build();
 		clientToolbar.addNavigation(sidePanelButton);
 		sidePanel.startPanel();
+		isSidePanelShown = true;
 	}
 
 	private void removeSidePanel()
 	{
 		clientToolbar.removeNavigation(sidePanelButton);
+		isSidePanelShown = false;
 	}
 
 	@Subscribe
@@ -218,6 +234,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		if (client.getTickCount() % 5 == 0)
 		{
 			updateNylocasRegion();
+			updateSidePanel();
 		}
 		if (isNylocasRegion && !isNylocasRegionLast)
 		{
@@ -343,6 +360,28 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	private void updateNylocasRegion()
 	{
 		isNylocasRegion = ArrayUtils.contains(client.getMapRegions(), NYLOCAS_REGION_ID);
+	}
+
+	private void updateSidePanel()
+	{
+		if (config.showSidePanelNyloOnly() == true)
+		{
+			if(isSidePanelShown == false && isNylocasRegion == true)
+			{
+				createSidePanel();
+			}
+			else if(isSidePanelShown == true && isNylocasRegion == false)
+			{
+				removeSidePanel();
+			}
+		}
+		else
+		{
+			if(isSidePanelShown == false)
+			{
+				createSidePanel();
+			}
+		}
 	}
 
 	private void updateNylocasAliveCount()

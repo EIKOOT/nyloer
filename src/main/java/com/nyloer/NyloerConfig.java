@@ -130,6 +130,15 @@ public interface NyloerConfig extends Config
 		return 2;
 	}
 
+	@ConfigItem(
+			position = 9,
+			keyName = "showSidePanelNyloOnly",
+			name = "Show Side Panel Only In Nylo",
+			description = "Show side panel always or only when in nylo",
+			section = generalSettings
+	)
+	default boolean showSidePanelNyloOnly() {return true;};
+
 	// ------------------------------------------------------------
 
 	@ConfigSection(
@@ -606,4 +615,5 @@ public interface NyloerConfig extends Config
 		hidden = true
 	)
 	void setPreviousRole(String role);
+
 }
