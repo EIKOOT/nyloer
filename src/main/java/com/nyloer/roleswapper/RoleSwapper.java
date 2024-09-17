@@ -133,7 +133,6 @@ public class RoleSwapper
 		}
 		if (!shiftSwaps)
 		{
-			swaps.add(CustomSwap.fromString("attack,verzik vitur*"));
 			swaps.add(CustomSwap.fromString("use,special attack"));
 			swaps.add(CustomSwap.fromString("Activate, Quick-Prayers"));
 			swaps.add(CustomSwap.fromString("Deactivate, Quick-Prayers"));
