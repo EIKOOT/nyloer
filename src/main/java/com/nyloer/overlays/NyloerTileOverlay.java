@@ -3,12 +3,20 @@ package com.nyloer.overlays;
 import com.nyloer.NyloerConfig;
 import com.nyloer.NyloerPlugin;
 import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
+import java.awt.Shape;
 import java.awt.Stroke;
 import javax.inject.Inject;
 import lombok.Setter;
+import net.runelite.api.Actor;
+import net.runelite.api.NPC;
+import net.runelite.api.NPCComposition;
+import net.runelite.api.Perspective;
+import net.runelite.api.coords.LocalPoint;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.NpcUtil;
@@ -76,19 +84,40 @@ public class NyloerTileOverlay extends Overlay
 					case "mage":
 						if (renderMage)
 						{
-							drawTile(graphics, nyloer);
+							if (config.displayMageTilesAsTrueTiles())
+							{
+								drawTrueTile(graphics, nyloer);
+							}
+							else
+							{
+								drawTile(graphics, nyloer);
+							}
 						}
 						break;
 					case "range":
 						if (renderRange)
 						{
-							drawTile(graphics, nyloer);
+							if (config.displayRangeTilesAsTrueTiles())
+							{
+								drawTrueTile(graphics, nyloer);
+							}
+							else
+							{
+								drawTile(graphics, nyloer);
+							}
 						}
 						break;
 					case "melee":
 						if (renderMelee)
 						{
-							drawTile(graphics, nyloer);
+							if (config.displayMeleeTilesAsTrueTiles())
+							{
+								drawTrueTile(graphics, nyloer);
+							}
+							else
+							{
+								drawTile(graphics, nyloer);
+							}
 						}
 						break;
 				}
@@ -103,6 +132,32 @@ public class NyloerTileOverlay extends Overlay
 		if (polygon != null)
 		{
 			OverlayUtil.renderPolygon(graphics, polygon, nyloer.getColor(), highlightWidth);
+		}
+	}
+
+	private void drawTrueTile(Graphics2D graphics, NyloerPlugin.NyloerNpc nyloer)
+	{
+		NPC npc = nyloer.getNpc();
+		NPCComposition npcComposition = npc.getTransformedComposition();
+		LocalPoint lp = LocalPoint.fromWorld(plugin.client, npc.getWorldLocation());
+		if ((lp != null) && (npcComposition != null))
+		{
+			final int size = npcComposition.getSize();
+			final LocalPoint centerLp = lp.plus(
+				Perspective.LOCAL_TILE_SIZE * (size - 1) / 2,
+				Perspective.LOCAL_TILE_SIZE * (size - 1) / 2);
+			Polygon tilePoly = Perspective.getCanvasTileAreaPoly(plugin.client, centerLp, size);
+			renderPoly(graphics, nyloer.getColor(), highlightWidth, tilePoly);
+		}
+	}
+
+	private void renderPoly(Graphics2D graphics, Color borderColor, Stroke borderStroke, Shape polygon)
+	{
+		if (polygon != null)
+		{
+			graphics.setColor(borderColor);
+			graphics.setStroke(borderStroke);
+			graphics.draw(polygon);
 		}
 	}
 }

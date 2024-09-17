@@ -84,18 +84,6 @@ public interface NyloerConfig extends Config
 
 	@ConfigItem(
 		position = 5,
-		keyName = "splitsAsNextWave",
-		name = "Splits As Next Wave",
-		description = "Splits will have wave + 1",
-		section = generalSettings
-	)
-	default boolean splitsAsNextWave()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-		position = 6,
 		keyName = "wavePrefix",
 		name = "Wave Spawn Prefix",
 		description = "Prefix for spawned nylocas from waves.",
@@ -107,7 +95,7 @@ public interface NyloerConfig extends Config
 	}
 
 	@ConfigItem(
-		position = 7,
+		position = 6,
 		keyName = "splitPrefix",
 		name = "Split Spawn Prefix",
 		description = "Prefix for spawned nylocas from splits.",
@@ -119,7 +107,7 @@ public interface NyloerConfig extends Config
 	}
 
 	@ConfigItem(
-		position = 8,
+		position = 7,
 		keyName = "tileHighlightWidth",
 		name = "Tile Highlight Width",
 		description = "Tile highlight width",
@@ -303,7 +291,31 @@ public interface NyloerConfig extends Config
 	}
 
 	@ConfigItem(
+		position = 13,
+		keyName = "darkerWave",
+		name = "Darker Wave",
+		description = "Makes the selected wave nyloes darker, as well as the older ones.",
+		section = fontsSettings
+	)
+	default int darkerWave()
+	{
+		return 0;
+	}
+
+	@ConfigItem(
 		position = 14,
+		keyName = "darkerWaveOffset",
+		name = "Darker Wave Offset",
+		description = "",
+		section = fontsSettings
+	)
+	default int darkerWaveOffset()
+	{
+		return 0;
+	}
+
+	@ConfigItem(
+		position = 15,
 		keyName = "customFontConfig",
 		name = "Font config",
 		description = "Config settings wave:melee/range/mage:color",
@@ -584,6 +596,42 @@ public interface NyloerConfig extends Config
 		position = 19
 	)
 	default boolean customHighlightMeleeTiles()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "displayMageTilesAsTrueTiles",
+		name = "True tiles for mage",
+		description = "True tiles will be displayed for magers",
+		section = roleSwapperSettings,
+		position = 20
+	)
+	default boolean displayMageTilesAsTrueTiles()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "displayRangeTilesAsTrueTiles",
+		name = "True tiles for range",
+		description = "True tiles will be displayed for rangers",
+		section = roleSwapperSettings,
+		position = 21
+	)
+	default boolean displayRangeTilesAsTrueTiles()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "displayMeleeTilesAsTrueTiles",
+		name = "True tiles for melees",
+		description = "True tiles will be displayed for melees",
+		section = roleSwapperSettings,
+		position = 22
+	)
+	default boolean displayMeleeTilesAsTrueTiles()
 	{
 		return false;
 	}

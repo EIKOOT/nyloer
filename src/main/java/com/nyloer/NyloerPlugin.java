@@ -116,6 +116,8 @@ public class NyloerPlugin extends Plugin implements KeyListener
 	@Getter
 	public int makeDarkerT;
 
+	private int _makeDarkerT;
+
 	@Getter
 	private int waveNumber;
 
@@ -230,6 +232,10 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		isNylocasRegionLast = isNylocasRegion;
 		if (isNylocasRegion)
 		{
+			if (client.getTickCount() == _makeDarkerT)
+			{
+				makeDarkerT = _makeDarkerT;
+			}
 			for (NyloerNpc nyloer : nyloers)
 			{
 				if (nyloer.npc.isDead())
@@ -276,6 +282,10 @@ public class NyloerPlugin extends Plugin implements KeyListener
 				if (waveNumber == 1)
 				{
 					w1T = client.getTickCount();
+				}
+				if (waveNumber == config.darkerWave())
+				{
+					_makeDarkerT = client.getTickCount() + config.darkerWaveOffset();
 				}
 			}
 			nyloers.add(nyloer);
@@ -335,6 +345,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 		NyloerPlugin.log.debug("Resetting Nyloer.");
 		waveNumber = 0;
 		nylocasAliveCount = 0;
+		_makeDarkerT = 0;
 		pillarsSpawned = false;
 		nyloers.clear();
 		nyloerOverlay.nyloers.clear();
@@ -544,7 +555,7 @@ public class NyloerPlugin extends Plugin implements KeyListener
 			this.isSplit = this.spawn.equals("SPLIT");
 			this.tickSpawned = NyloerPlugin.this.client.getTickCount();
 			this.colorDarker = false;
-			if (isSplit && config.splitsAsNextWave() && tickSpawned > NyloerPlugin.this.lastWaveTickSpawned)
+			if (isSplit && tickSpawned > NyloerPlugin.this.lastWaveTickSpawned)
 			{
 				this.waveSpawned = NyloerPlugin.this.waveNumber + 1;
 			}
